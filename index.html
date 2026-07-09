@@ -75,10 +75,19 @@
     grid-template-rows: 1fr 1fr;
     gap:16px;
   }
+  @media (max-width: 900px){
+    :root{
+      --presto-a: #f0791f;
+      --presto-b: #55565a;
+      --techto-a: #d43a3f;
+      --techto-b: #f0d84a;
+    }
+  }
   @media (orientation: landscape){
     .grid{
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr;
+      max-height: 320px;
     }
   }
   a.card{
