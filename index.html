@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Vidal</title>
+<style>
+  :root{
+    --bg: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #8a8a8a;
+    --line: #e6e6e6;
+
+    --presto-a: #ff6a00;
+    --presto-b: #4a4a4a;
+
+    --techto-a: #e2101a;
+    --techto-b: #f6d600;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  header{
+    padding: 56px 24px 8px;
+    text-align:center;
+  }
+  .mark{
+    display:inline-block;
+    margin-bottom: 22px;
+  }
+  .mark span{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink);
+  }
+  h1{
+    font-size:clamp(26px, 4.5vw, 34px);
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14px;
+    margin-top:6px;
+  }
+  main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px 20px 48px;
+  }
+  .grid{
+    width:100%;
+    max-width: 720px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width: 560px){
+    .grid{ grid-template-columns: 1fr; }
+  }
+  a.card{
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:180px;
+    border-radius:20px;
+    text-decoration:none;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  a.card:hover, a.card:focus-visible{
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+  }
+  a.card:active{ transform: translateY(-1px); }
+
+  /* Presto: laranja cheio, faixa diagonal cinza-escura (remete à seta do logo) */
+  #presto{
+    background: var(--presto-a);
+  }
+  #presto .bar{
+    position:absolute;
+    top:0; bottom:0; right:-30px;
+    width:90px;
+    background: var(--presto-b);
+    transform: skewX(-12deg);
+  }
+  #presto .name{ color:#ffffff; }
+
+  /* Techto: vermelho cheio, faixa amarela sólida na base (remete ao logo) */
+  #techto{
+    background: var(--techto-a);
+  }
+  #techto .bar{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:26px;
+    background: var(--techto-b);
+  }
+  #techto .name{ color:#ffffff; }
+
+  .name{
+    position:relative;
+    z-index:2;
+    font-size:26px;
+    font-weight:800;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+  }
+
+  footer{
+    text-align:center;
+    padding: 0 20px 36px;
+    color:var(--muted);
+    font-size:12px;
+  }
+  footer a{
+    color:var(--muted);
+    text-decoration:none;
+    border-bottom:1px dotted var(--line);
+  }
+  footer a:hover{ color:var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="mark">
+    <span>Vidal Representações</span>
+  </div>
+  <h1>Hub Vidal</h1>
+  <div class="sub">Acesso rápido aos sistemas</div>
+</header>
+
+<main>
+  <div class="grid">
+    <a class="card" id="presto" href="./presto/">
+      <span class="name">Presto</span>
+      <div class="bar"></div>
+    </a>
+
+    <a class="card" id="techto" href="./techto/">
+      <span class="name">Techto</span>
+      <div class="bar"></div>
+    </a>
+  </div>
+</main>
+
+<footer>
+  <a href="https://williamvidalrepresenta.github.io/vidal-crm/">CRM Clientes →</a>
+</footer>
+
+</body>
+</html>
