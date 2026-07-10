@@ -194,6 +194,7 @@
             </div>
             <div class="summary-box">
               <div class="summary-row"><span>Rascunho</span><strong id="draftStatus">Novo</strong></div>
+              <div class="summary-row"><span>Nuvem</span><strong id="cloudStatus">—</strong></div>
               <div class="summary-row"><span>Data</span><strong id="draftDate"></strong></div>
             </div>
           </div>
@@ -339,7 +340,10 @@
           <div class="inline-actions" style="margin-top:8px">
             <button class="btn btn-primary" id="exportDataBtn">Exportar base (JSON)</button>
             <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">Importar base (JSON)<input type="file" id="importDataInput" accept="application/json" style="display:none" /></label>
+            <button class="btn btn-primary" id="pushCloudBtn">Enviar tudo para a nuvem ☁️</button>
+            <button class="btn btn-discreet" id="pullCloudBtn">Baixar da nuvem agora</button>
           </div>
+          <p class="helper" id="cloudPushStatus" style="margin-top:6px"></p>
         </section>
         <section>
           <div class="panel-title" style="margin-bottom:6px">Clientes salvos (<span id="clientsCount">0</span>)</div>
@@ -427,7 +431,9 @@
       ['cnpj','CNPJ','text'],['address','Endereço','text'],['cityUf','Cidade / UF','text'],['district','Bairro','text'],['cep','CEP','text'],['phone','Telefone','text'],['stateRegistration','Ins. Estadual','text'],['billingForecast','Previsão de faturamento','text'],['invoiceEmail','Email NFe','email'],['buyer','Comprador','text'],['buyerEmail','Email comprador','email'],['seller','Vendedor','text', true]
     ];
 
-    const STORE_KEYS = { draft: CONFIGURACOES.comportamento.storageKey, clients: 'sistema-vidal-techto-clients-v1', customItems: 'sistema-vidal-techto-customitems-v1', history: 'sistema-vidal-techto-history-v1' };
+    const STORE_KEYS = { draft: CONFIGURACOES.comportamento.storageKey, clients: 'sistema-vidal-techto-clients-v1', customItems: 'sistema-vidal-techto-customitems-v1', history: 'sistema-vidal-techto-history-v1', paymentTerms: 'sistema-vidal-techto-paymentterms-v1' };
+    // ===== Sincronização com a nuvem (Google Sheets via Apps Script) =====
+    const CLOUD_URL = 'https://script.google.com/macros/s/AKfycbx74X5tMLPF8FyI7J-K0asVNLDfZeAbR2o1HkBVlKXV12doV11UhBII3Ibh8zBD7PGnvg/exec';
 
     const state = {
       presentationMode:false, sortState:0, manualGrandTotal:null,
@@ -439,11 +445,12 @@
     let savedClients = loadStore(STORE_KEYS.clients, {});
     let customItems = loadStore(STORE_KEYS.customItems, []);
     let history = loadStore(STORE_KEYS.history, []);
+    let paymentTermsCache = loadStore(STORE_KEYS.paymentTerms, []); // [{term, useCount, lastUsedAt}]
 
     const els = {
       saleType: q('#saleType'), paymentCondition: q('#paymentCondition'), freightType:q('#freightType'), resaleDiscount:q('#resaleDiscount'),
       conditionDiscountLabel:q('#conditionDiscountLabel'), freightDiscountLabel:q('#freightDiscountLabel'), commissionRow:q('#commissionRow'), commissionLabel:q('#commissionLabel'),
-      commissionTotalRow:q('#commissionTotalRow'), commissionTotal:q('#commissionTotal'), draftStatus:q('#draftStatus'), draftDate:q('#draftDate'),
+      commissionTotalRow:q('#commissionTotalRow'), commissionTotal:q('#commissionTotal'), draftStatus:q('#draftStatus'), draftDate:q('#draftDate'), cloudStatus:q('#cloudStatus'),
       clientSuggestions:q('#clientSuggestions'), clientNameHighlight:q('#clientNameHighlight'), companyHighlight:q('#companyHighlight'), dateHighlight:q('#dateHighlight'), orderHighlight:q('#orderHighlight'), paymentHighlight:q('#paymentHighlight'), freightHighlight:q('#freightHighlight'),
       policyToggle:q('#policyToggle'), policyContent:q('#policyContent'), clientSummaryToggle:q('#clientSummaryToggle'), clientSummaryContent:q('#clientSummaryContent'), ipiTotalOnly:q('#ipiTotalOnly'), stTotalOnly:q('#stTotalOnly'),
       itemSearch:q('#itemSearch'), suggestions:q('#suggestions'), itemsBody:q('#itemsBody'), productCount:q('#productCount'), totalWithoutTax:q('#totalWithoutTax'), grandTotal:q('#grandTotal'), manualGrandWrap:q('#manualGrandWrap'), manualGrandInput:q('#manualGrandInput'), savingsBlock:q('#savingsBlock'),
@@ -454,6 +461,84 @@
 
     function loadStore(key, fallback) { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; } }
     function saveStore(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+    function setCloudStatus(text) { if (els.cloudStatus) els.cloudStatus.textContent = text; }
+
+    async function cloudPost(action, extra) {
+      try {
+        await fetch(CLOUD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS no Apps Script
+          body: JSON.stringify(Object.assign({ action }, extra))
+        });
+        setCloudStatus('☁️ sincronizado');
+        return true;
+      } catch (err) {
+        setCloudStatus('📴 offline (salvo local)');
+        return false;
+      }
+    }
+
+    function cloudUpsertClient(key, values) { return cloudPost('upsertClient', { key, values }); }
+    function cloudUpsertItem(key, values) { return cloudPost('upsertItem', { key, values }); }
+    function cloudUpsertPayment(term) { return cloudPost('upsertPayment', { key: term }); }
+    function cloudAppendHistory(rowValues) { return cloudPost('append', { sheet: 'Historico', values: rowValues }); }
+
+    async function cloudSyncOnLoad() {
+      setCloudStatus('sincronizando…');
+      try {
+        const res = await fetch(CLOUD_URL + '?action=getAll');
+        if (!res.ok) throw new Error('bad response');
+        const data = await res.json();
+
+        // Clientes: nuvem entra no dicionário local (nuvem mais recente prevalece por updatedAt)
+        (data.Clientes || []).forEach(row => {
+          if (!row.key) return;
+          const local = savedClients[row.key];
+          if (!local || !local.updatedAt || (row.updatedAt && row.updatedAt > local.updatedAt)) {
+            const snap = {}; for (const [k] of CLIENT_FIELDS) if (row[k]) snap[k] = row[k];
+            snap.updatedAt = row.updatedAt;
+            savedClients[row.key] = snap;
+          }
+        });
+        saveStore(STORE_KEYS.clients, savedClients);
+
+        // Itens manuais: upsert local por code (ou descrição se sem code)
+        (data.ItensManuais || []).forEach(row => {
+          const idx = customItems.findIndex(c => (row.code && c.code === row.code) || (!row.code && c.description === row.description));
+          const entry = { code: row.code || '', description: row.description || '', application: row.application || '', ncm: row.ncm || '', ipi: Number(row.ipi || 0), hasSt: !!row.hasSt, stPercent: Number(row.stPercent || 0), resalePrice: Number(row.resalePrice || 0), finalPrice: Number(row.finalPrice || 0) };
+          if (idx >= 0) customItems[idx] = entry; else customItems.push(entry);
+        });
+        saveStore(STORE_KEYS.customItems, customItems);
+
+        // Formas de pagamento
+        paymentTermsCache = (data.FormasPagamento || []).map(r => ({ term: r.term, useCount: Number(r.useCount || 0), lastUsedAt: r.lastUsedAt || '' }));
+        saveStore(STORE_KEYS.paymentTerms, paymentTermsCache);
+        renderPaymentTermsList();
+
+        renderSettings();
+        setCloudStatus('☁️ sincronizado');
+      } catch (err) {
+        setCloudStatus('📴 offline (dados locais)');
+      }
+    }
+
+    function renderPaymentTermsList() {
+      const dl = q('#paymentTermsList'); if (!dl) return;
+      const sorted = [...paymentTermsCache].sort((a, b) => (b.useCount || 0) - (a.useCount || 0));
+      dl.innerHTML = sorted.map(p => `<option value="${escapeHtml(p.term)}"></option>`).join('');
+    }
+
+    function registerPaymentTermUsage(term) {
+      term = String(term || '').trim();
+      if (!term) return;
+      const idx = paymentTermsCache.findIndex(p => p.term.toLowerCase() === term.toLowerCase());
+      if (idx >= 0) { paymentTermsCache[idx].useCount = (paymentTermsCache[idx].useCount || 0) + 1; paymentTermsCache[idx].lastUsedAt = new Date().toISOString(); }
+      else paymentTermsCache.push({ term, useCount: 1, lastUsedAt: new Date().toISOString() });
+      saveStore(STORE_KEYS.paymentTerms, paymentTermsCache);
+      renderPaymentTermsList();
+      cloudUpsertPayment(term);
+    }
 
     function deriveCategory(desc) {
       const d = (desc || '').toUpperCase();
@@ -495,6 +580,8 @@
       bindEvents();
       loadDraftPrompt();
       renderAll();
+      renderPaymentTermsList();
+      cloudSyncOnLoad();
     }
 
     function bindEvents() {
@@ -554,6 +641,8 @@
       q('#historyBtn').addEventListener('click', () => { renderHistory(); els.historyDialog.showModal(); });
       q('#exportDataBtn').addEventListener('click', exportDatabase);
       q('#importDataInput').addEventListener('change', importDatabase);
+      q('#pushCloudBtn').addEventListener('click', pushAllToCloud);
+      q('#pullCloudBtn').addEventListener('click', pullFromCloudManual);
       q('#saveCurrentClient').addEventListener('click', saveCurrentClient);
       q('#saveClientQuick').addEventListener('click', saveCurrentClient);
       q('#clearAllBtn').addEventListener('click', () => {
@@ -591,6 +680,9 @@
         const key = input.dataset.clientField;
         input.value = state.client[key] || '';
         input.addEventListener('input', e => updateClientField(key, e.target.value, true));
+        if (key === 'paymentTerms') {
+          input.addEventListener('blur', e => registerPaymentTermUsage(e.target.value));
+        }
       });
     }
 
@@ -714,6 +806,7 @@
       if (dupIdx >= 0) { if (!confirm('Já existe item manual com mesmo código/descrição. Substituir?')) return; customItems[dupIdx] = entry; }
       else customItems.push(entry);
       saveStore(STORE_KEYS.customItems, customItems);
+      cloudUpsertItem(entry.code || entry.description, entry);
       alert('Item manual salvo para reuso.');
     }
 
@@ -1161,6 +1254,8 @@
       if (savedClients[key] && !confirm('Já existe um cliente com este nome/empresa salvo. Substituir?')) return;
       savedClients[key] = snap;
       saveStore(STORE_KEYS.clients, savedClients);
+      cloudUpsertClient(key, snap);
+      if (snap.paymentTerms) registerPaymentTermUsage(snap.paymentTerms);
       alert('Cliente salvo.');
     }
 
@@ -1186,6 +1281,15 @@
       history.unshift(snap);
       history = history.slice(0, 200);
       saveStore(STORE_KEYS.history, history);
+      cloudAppendHistory({
+        id: snap.id, savedAt: snap.savedAt, docType: snap.docType,
+        clientKey: clientKey(snap.client),
+        clientJson: JSON.stringify(snap.client),
+        itemsJson: JSON.stringify(snap.items),
+        policyJson: JSON.stringify(snap.policy),
+        notes: snap.notes,
+        totalGrand: snap.totals.grand
+      });
     }
     function renderHistory() {
       els.historyList.innerHTML = history.map(h => `
@@ -1208,6 +1312,28 @@
     }
 
     // ===== Export / Import JSON =====
+    async function pushAllToCloud() {
+      const statusEl = q('#cloudPushStatus');
+      const setMsg = m => { if (statusEl) statusEl.textContent = m; };
+      const clientEntries = Object.entries(savedClients);
+      const total = clientEntries.length + customItems.length + history.length;
+      if (!total) { setMsg('Nada para enviar.'); return; }
+      if (!confirm(`Enviar ${clientEntries.length} clientes, ${customItems.length} itens manuais e ${history.length} registros de histórico para a nuvem?`)) return;
+      setMsg('Enviando…'); let done = 0;
+      for (const [key, snap] of clientEntries) { await cloudUpsertClient(key, snap); done++; setMsg(`Enviando… ${done}/${total}`); }
+      for (const it of customItems) { await cloudUpsertItem(it.code || it.description, it); done++; setMsg(`Enviando… ${done}/${total}`); }
+      for (const h of history) {
+        await cloudAppendHistory({ id: h.id, savedAt: h.savedAt, docType: h.docType, clientKey: clientKey(h.client), clientJson: JSON.stringify(h.client), itemsJson: JSON.stringify(h.items), policyJson: JSON.stringify(h.policy), notes: h.notes || '', totalGrand: h.totals ? h.totals.grand : '' });
+        done++; setMsg(`Enviando… ${done}/${total}`);
+      }
+      setMsg(`Concluído: ${total} registros enviados para a nuvem.`);
+    }
+
+    async function pullFromCloudManual() {
+      await cloudSyncOnLoad();
+      alert('Dados baixados da nuvem e mesclados com os locais.');
+    }
+
     function exportDatabase() {
       const includeHistory = q('#exportIncludeHistory').checked;
       const payload = { version: 6, exportedAt: new Date().toISOString(), clients: savedClients, customItems, history: includeHistory ? history : [] };
