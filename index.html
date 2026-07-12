@@ -2,1181 +2,213 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vendas — Vidal Representações</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub Vidal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%23ffffff'/%3E%3Cpath d='M20 15 L35 15 L35 42 L65 42 L65 15 L80 15 L80 85 L65 85 L65 57 L35 57 L35 85 L20 85 Z' fill='%231a1a1a'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ffffff'/%3E%3Cpath d='M20 15 L35 15 L35 42 L65 42 L65 15 L80 15 L80 85 L65 85 L65 57 L35 57 L35 85 L20 85 Z' fill='%231a1a1a'/%3E%3C/svg%3E">
 <style>
   :root{
-    --color-primary:#1B3A6B;
-    --color-primary-dark:#12274A;
-    --color-primary-light:#2C5282;
-    --color-bg:#F3F5F8;
-    --color-surface:#FFFFFF;
-    --color-text:#1F2933;
-    --color-text-muted:#6B7280;
-    --color-text-faint:#9AA5B1;
-    --color-border:#E2E5EA;
-    --color-success:#1B8A5A;
-    --color-success-bg:#E7F5EE;
-    --color-danger:#C0392B;
-    --color-danger-bg:#FBEAE8;
-    --color-warning:#B9770E;
-    --color-warning-bg:#FCF3E3;
-    --brand-R:#E30613;
-    --brand-C:#F7941D;
-    --brand-T:#0EA5A5;
-    --brand-P:#6C3FC5;
-    --brand-H:#B08D57;
-    --radius-sm:8px;
-    --radius:14px;
-    --radius-lg:18px;
-    --shadow-sm:0 1px 2px rgba(20,30,50,.06);
-    --shadow:0 2px 10px rgba(20,30,50,.08);
-    --shadow-lg:0 8px 28px rgba(20,30,50,.14);
-    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --font-num: "SF Mono", "Consolas", "Menlo", ui-monospace, monospace;
-  }
+    --bg: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #8a8a8a;
+    --line: #e6e6e6;
 
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; }
+    --presto-a: #ff6a00;
+    --presto-b: #4a4a4a;
+
+    --techto-a: #e2101a;
+    --techto-b: #f6d600;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    overflow:hidden;
+  }
   body{
-    font-family: var(--font-ui);
-    background: var(--color-bg);
-    color: var(--color-text);
-    -webkit-font-smoothing: antialiased;
-    padding-bottom: 78px;
-    min-height: 100vh;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    height:100dvh;
   }
-  button{ font-family: inherit; }
-  input, select{ font-family: inherit; }
-
-  /* ---------- Header ---------- */
-  .topbar{
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    color: #fff;
-    padding: 14px 16px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    box-shadow: var(--shadow);
+  header{
+    padding: clamp(20px, 5vh, 48px) 20px 4px;
+    text-align:center;
+    flex-shrink:0;
   }
-  .topbar-row{
+  .mark{
+    display:inline-block;
+    margin-bottom: clamp(10px, 2.5vh, 22px);
+  }
+  .mark span{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink);
+  }
+  h1{
+    font-size:clamp(24px, 4.5vw, 34px);
+    font-weight:800;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14px;
+    margin-top:6px;
+  }
+  main{
+    flex:1;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap: 10px;
+    justify-content:center;
+    padding: 12px 20px;
+    min-height:0;
   }
-  .topbar-title{
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: .2px;
+  .grid{
+    width:100%;
+    max-width: 720px;
+    height:100%;
+    max-height: 420px;
+    display:grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap:16px;
   }
-  .topbar-title small{
-    display:block;
-    font-size: 11px;
-    font-weight: 500;
-    opacity: .7;
-    letter-spacing: .3px;
+  @media (max-width: 900px){
+    :root{
+      --presto-a: #f0791f;
+      --presto-b: #55565a;
+      --techto-a: #d43a3f;
+      --techto-b: #f0d84a;
+    }
   }
-  .sync-pill{
+  @media (orientation: landscape){
+    .grid{
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr;
+      height: 220px;
+      max-height: 220px;
+      flex-grow: 0;
+    }
+  }
+  a.card{
+    position:relative;
+    overflow:hidden;
     display:flex;
     align-items:center;
-    gap:6px;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.18);
-    border-radius: 999px;
-    padding: 6px 10px 6px 8px;
-    font-size: 11.5px;
-    cursor:pointer;
-    white-space: nowrap;
-    transition: background .15s;
+    justify-content:center;
+    height:100%;
+    min-height:0;
+    border-radius:20px;
+    text-decoration:none;
+    transition: transform .18s ease, box-shadow .18s ease;
   }
-  .sync-pill:active{ background: rgba(255,255,255,.22); }
-  .sync-dot{
-    width:7px; height:7px; border-radius:50%;
-    background: #6EE7B7;
-    box-shadow: 0 0 0 3px rgba(110,231,183,.25);
+  a.card:hover, a.card:focus-visible{
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
   }
-  .sync-dot.offline{ background:#FBBF24; box-shadow: 0 0 0 3px rgba(251,191,36,.25); }
-  .sync-dot.error{ background:#F87171; box-shadow: 0 0 0 3px rgba(248,113,113,.25); }
-  .sync-dot.loading{ background:#93C5FD; box-shadow: 0 0 0 3px rgba(147,197,253,.25); animation: pulse 1.2s infinite; }
-  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.4} }
-  .sync-refresh-icon{ font-size:13px; opacity:.85; }
+  a.card:active{ transform: translateY(-1px); }
 
-  /* ---------- Layout ---------- */
-  .view{ display:none; padding: 14px 14px 8px; max-width: 720px; margin: 0 auto; }
-  .view.active{ display:block; }
+  /* Presto: laranja cheio, faixa diagonal cinza-escura (remete à seta do logo) */
+  #presto{
+    background: var(--presto-a);
+  }
+  #presto .bar{
+    position:absolute;
+    top:0; bottom:0; right:-30px;
+    width:90px;
+    background: var(--presto-b);
+    transform: skewX(-12deg);
+  }
+  #presto .name{ color:#ffffff; }
 
-  .card{
-    background: var(--color-surface);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--color-border);
-    padding: 16px;
-    margin-bottom: 14px;
+  /* Techto: vermelho cheio, faixa amarela sólida na base (remete ao logo) */
+  #techto{
+    background: var(--techto-a);
   }
-  .card h3{
-    margin: 0 0 12px;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: .5px;
+  #techto .bar{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:26px;
+    background: var(--techto-b);
   }
+  #techto .name{ color:#ffffff; }
 
-  /* ---------- Month nav ---------- */
-  .month-nav{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom: 12px;
-  }
-  .month-nav button{
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 50%;
-    width: 34px; height: 34px;
-    font-size: 16px;
-    color: var(--color-primary);
-    cursor:pointer;
-  }
-  .month-nav button:disabled{ opacity:.3; cursor:default; }
-  .month-nav .label{
-    font-size: 15px;
-    font-weight: 700;
-    text-transform: capitalize;
+  .name{
+    position:relative;
+    z-index:2;
+    font-size:26px;
+    font-weight:800;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
   }
 
-  .kpi-total{
-    font-family: var(--font-num);
-    font-size: 30px;
-    font-weight: 700;
-    color: var(--color-primary);
-    letter-spacing: -0.5px;
-    line-height: 1.1;
+  footer{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap: clamp(8px, 2vw, 14px);
+    flex-wrap: wrap;
+    padding: 8px 20px clamp(16px, 4vh, 32px);
+    flex-shrink:0;
   }
-  .kpi-sub{
-    font-size: 12.5px;
-    color: var(--color-text-muted);
-    margin-top: 2px;
-  }
-  .kpi-delta{
+  .crm-btn{
     display:inline-flex;
     align-items:center;
-    gap:4px;
-    font-size: 12.5px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 999px;
-    margin-top: 8px;
+    justify-content:center;
+    padding: 12px 22px;
+    border-radius:12px;
+    color:#ffffff;
+    font-weight:700;
+    font-size:14px;
+    text-decoration:none;
+    letter-spacing:0.01em;
+    transition: transform .15s ease, background .15s ease;
   }
-  .kpi-delta.up{ background: var(--color-success-bg); color: var(--color-success); }
-  .kpi-delta.down{ background: var(--color-danger-bg); color: var(--color-danger); }
-  .kpi-delta.flat{ background: var(--color-bg); color: var(--color-text-muted); }
+  .crm-btn:active{ transform: translateY(0); }
 
-  .brand-breakdown{
-    display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
-  }
-  .brand-chip{
-    display:flex; align-items:center; gap:6px;
-    background: var(--color-bg);
-    border-radius: var(--radius-sm);
-    padding: 7px 10px;
-    font-size: 12px;
-    flex: 1 1 auto;
-    min-width: 92px;
-  }
-  .brand-dot{
-    width:9px; height:9px; border-radius:50%; flex-shrink:0;
-  }
-  .brand-chip .val{ font-family: var(--font-num); font-weight:700; margin-left:auto; font-size:12px; }
+  .crm-btn.green{ background:#0f9d58; }
+  .crm-btn.green:hover, .crm-btn.green:focus-visible{ background:#0c8548; transform: translateY(-2px); }
 
-  /* ---------- Filter bar ---------- */
-  .filter-toggle{
-    display:flex; align-items:center; justify-content:space-between;
-    cursor:pointer; user-select:none;
-  }
-  .filter-toggle .chev{ transition: transform .2s; color: var(--color-text-muted); }
-  .filter-toggle.open .chev{ transform: rotate(180deg); }
-  .filter-body{ display:none; margin-top: 14px; }
-  .filter-body.open{ display:block; }
+  .crm-btn.blue{ background:#2f6fed; }
+  .crm-btn.blue:hover, .crm-btn.blue:focus-visible{ background:#255bc4; transform: translateY(-2px); }
 
-  .seg-control{
-    display:flex; background: var(--color-bg); border-radius: var(--radius-sm);
-    padding: 3px; gap: 3px; margin-bottom: 10px;
-  }
-  .seg-control button{
-    flex:1; border:none; background:transparent; padding: 8px 6px;
-    font-size: 12.5px; font-weight:600; color: var(--color-text-muted);
-    border-radius: 6px; cursor:pointer;
-  }
-  .seg-control button.active{ background: var(--color-surface); color: var(--color-primary); box-shadow: var(--shadow-sm); }
-
-  .field-row{ display:flex; gap:8px; margin-bottom:10px; flex-wrap: wrap; }
-  .field-row > *{ flex:1; min-width: 120px; }
-  label.field-label{ display:block; font-size:11px; color: var(--color-text-muted); margin-bottom:4px; font-weight:600; }
-  select, input[type="text"], input[type="date"]{
-    width:100%; padding: 9px 10px; border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm); font-size: 13.5px; background: var(--color-surface); color: var(--color-text);
-  }
-  select:focus, input:focus{ outline: 2px solid var(--color-primary-light); outline-offset: 1px; }
-
-  .brand-toggles{ display:flex; gap:6px; margin-bottom: 4px; flex-wrap: wrap; }
-  .brand-toggle{
-    flex: 1 1 auto; min-width: 42px; text-align:center;
-    border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
-    padding: 7px 4px; font-size: 12.5px; font-weight:700; cursor:pointer;
-    color: var(--color-text-muted); background: var(--color-surface);
-  }
-  .brand-toggle.active{ color:#fff; border-color: transparent; }
-
-  .btn-clear{
-    background:none; border:none; color: var(--color-primary); font-size:12.5px; font-weight:600;
-    cursor:pointer; padding: 6px 0; text-decoration: underline;
-  }
-
-  /* ---------- Rankings ---------- */
-  .rank-row{
-    display:flex; align-items:center; gap:10px; padding: 9px 0;
-    border-bottom: 1px solid var(--color-border);
-  }
-  .rank-row:last-child{ border-bottom:none; }
-  .rank-num{
-    width:22px; height:22px; border-radius:50%; background: var(--color-bg);
-    display:flex; align-items:center; justify-content:center;
-    font-size: 11px; font-weight:700; color: var(--color-text-muted); flex-shrink:0;
-  }
-  .rank-info{ flex:1; min-width:0; }
-  .rank-name{ font-size: 13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .rank-sub{ font-size: 11.5px; color: var(--color-text-muted); }
-  .rank-val{ font-family: var(--font-num); font-size: 13px; font-weight:700; color: var(--color-primary); white-space:nowrap; }
-
-  .empty-state{
-    text-align:center; padding: 30px 12px; color: var(--color-text-muted); font-size: 13.5px;
-  }
-  .empty-state .big{ font-size: 30px; margin-bottom: 8px; display:block; }
-
-  /* ---------- Search ---------- */
-  .search-box{ position:relative; margin-bottom: 12px; }
-  .search-box input{ padding-left: 34px; }
-  .search-box .icon{ position:absolute; left:11px; top:50%; transform:translateY(-50%); color: var(--color-text-faint); font-size:14px; }
-
-  .suggest-list{ margin-top: 8px; }
-  .suggest-item{
-    padding: 11px 12px; border-radius: var(--radius-sm); cursor:pointer;
-    border: 1px solid var(--color-border); margin-bottom:6px; background: var(--color-surface);
-  }
-  .suggest-item:active{ background: var(--color-bg); }
-  .suggest-item .name{ font-size:13.5px; font-weight:600; }
-  .suggest-item .meta{ font-size:11.5px; color: var(--color-text-muted); margin-top:2px; }
-
-  /* ---------- Client detail ---------- */
-  .client-header{ display:flex; align-items:center; gap:10px; margin-bottom: 4px; }
-  .back-btn{
-    background: var(--color-bg); border:none; border-radius:50%; width:32px; height:32px;
-    font-size:15px; color: var(--color-primary); cursor:pointer; flex-shrink:0;
-  }
-  .client-header h2{ font-size:16px; margin:0; flex:1; min-width:0; }
-
-  .company-grid{ display:grid; grid-template-columns: repeat(5,1fr); gap:6px; margin-top:10px; }
-  .company-cell{
-    border-radius: var(--radius-sm); padding: 8px 4px; text-align:center; background: var(--color-bg);
-  }
-  .company-cell .letter{
-    width:20px; height:20px; border-radius:50%; color:#fff; font-size:10.5px; font-weight:700;
-    display:flex; align-items:center; justify-content:center; margin: 0 auto 5px;
-  }
-  .company-cell .date{ font-size:10px; font-weight:700; color: var(--color-text); }
-  .company-cell .val{ font-size:9.5px; color: var(--color-text-muted); font-family: var(--font-num); }
-  .company-cell.empty .date{ color: var(--color-text-faint); font-weight:500; }
-
-  .order-item{
-    border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin-bottom:8px; overflow:hidden;
-  }
-  .order-item-head{
-    display:flex; align-items:center; gap:10px; padding: 11px 12px; cursor:pointer; background: var(--color-surface);
-  }
-  .order-item-head:active{ background: var(--color-bg); }
-  .order-brand-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-  .order-item-main{ flex:1; min-width:0; }
-  .order-item-date{ font-size: 13px; font-weight:700; }
-  .order-item-meta{ font-size:11px; color: var(--color-text-muted); }
-  .order-item-total{ font-family: var(--font-num); font-size:13px; font-weight:700; color: var(--color-primary); }
-  .order-item-chev{ color: var(--color-text-faint); transition: transform .2s; font-size:12px; }
-  .order-item.open .order-item-chev{ transform: rotate(180deg); }
-  .order-item-body{ display:none; padding: 0 12px 12px; background: var(--color-bg); }
-  .order-item.open .order-item-body{ display:block; }
-  .order-line{
-    display:flex; justify-content:space-between; gap:8px; padding: 7px 0;
-    border-bottom: 1px dashed var(--color-border); font-size:12px;
-  }
-  .order-line:last-child{ border-bottom:none; }
-  .order-line .p-name{ flex:1; min-width:0; }
-  .order-line .p-code{ color: var(--color-text-faint); font-size:10.5px; }
-  .order-line .p-num{ font-family: var(--font-num); text-align:right; white-space:nowrap; font-size:11.5px; color: var(--color-text-muted); }
-
-  /* ---------- Product results ---------- */
-  .prod-result{
-    border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom:8px;
-  }
-  .prod-result-top{ display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
-  .prod-result .prod-client{ font-size:13.5px; font-weight:600; }
-  .prod-result .prod-total{ font-family: var(--font-num); font-weight:700; color: var(--color-primary); font-size:13px; white-space:nowrap; }
-  .prod-result .prod-meta{ font-size:11.5px; color: var(--color-text-muted); margin-top:3px; }
-
-  /* ---------- Bottom nav ---------- */
-  .bottom-nav{
-    position: fixed; bottom:0; left:0; right:0;
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-    display:flex;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    box-shadow: 0 -2px 12px rgba(20,30,50,.08);
-    z-index: 40;
-  }
-  .nav-btn{
-    flex:1; background:none; border:none; padding: 8px 4px 6px;
-    display:flex; flex-direction:column; align-items:center; gap:3px;
-    color: var(--color-text-faint); cursor:pointer; border-radius: var(--radius-sm);
-  }
-  .nav-btn .nav-icon{ font-size: 19px; }
-  .nav-btn .nav-label{ font-size: 10.5px; font-weight:600; }
-  .nav-btn.active{ color: var(--color-primary); }
-
-  .toast{
-    position: fixed; bottom: 88px; left:50%; transform: translateX(-50%);
-    background: var(--color-primary-dark); color:#fff; padding: 10px 18px; border-radius: 999px;
-    font-size: 12.5px; box-shadow: var(--shadow-lg); z-index: 50; opacity:0; transition: opacity .25s, transform .25s;
-    pointer-events:none; white-space:nowrap;
-  }
-  .toast.show{ opacity:1; transform: translateX(-50%) translateY(-4px); }
-
-  .loader-inline{ display:flex; align-items:center; gap:8px; color: var(--color-text-muted); font-size:13px; padding: 20px 0; justify-content:center; }
-  .spinner{
-    width:16px; height:16px; border-radius:50%; border: 2px solid var(--color-border); border-top-color: var(--color-primary);
-    animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin{ to{ transform: rotate(360deg); } }
-
-  .year-compare-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--color-border); font-size:13px; }
-  .year-compare-row:last-child{ border-bottom:none; }
-  .year-compare-row .yr{ font-weight:700; }
-  .year-compare-row .v{ font-family: var(--font-num); font-weight:700; color: var(--color-primary); }
+  .crm-btn.red{ background:#d9564f; }
+  .crm-btn.red:hover, .crm-btn.red:focus-visible{ background:#c1453f; transform: translateY(-2px); }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-row">
-    <div class="topbar-title">Vendas Vidal<small id="headerSubtitle">carregando…</small></div>
-    <div class="sync-pill" id="syncPill" onclick="manualRefresh()">
-      <span class="sync-dot loading" id="syncDot"></span>
-      <span id="syncLabel">Sincronizando</span>
-      <span class="sync-refresh-icon">⟳</span>
-    </div>
+<header>
+  <div class="mark">
+    <span>Vidal Representações</span>
   </div>
-</div>
+  <h1>Hub Vidal</h1>
+  <div class="sub">Acesso rápido aos sistemas</div>
+</header>
 
-<!-- ================= DASHBOARD ================= -->
-<div class="view active" id="view-dashboard">
+<main>
+  <div class="grid">
+    <a class="card" id="presto" href="./presto/">
+      <span class="name">Presto</span>
+      <div class="bar"></div>
+    </a>
 
-  <div class="card">
-    <div class="month-nav">
-      <button id="prevMonthBtn" onclick="shiftMonth(-1)">‹</button>
-      <div class="label" id="monthLabel">—</div>
-      <button id="nextMonthBtn" onclick="shiftMonth(1)">›</button>
-    </div>
-    <div class="kpi-total" id="kpiTotal">R$ 0</div>
-    <div class="kpi-sub" id="kpiOrdersCount">0 pedidos</div>
-    <div class="kpi-delta flat" id="kpiDelta">—</div>
-    <div class="brand-breakdown" id="brandBreakdown"></div>
+    <a class="card" id="techto" href="./techto/">
+      <span class="name">Techto</span>
+      <div class="bar"></div>
+    </a>
   </div>
+</main>
 
-  <div class="card">
-    <div class="filter-toggle" id="filterToggle" onclick="toggleFilter()">
-      <h3 style="margin:0;">Filtro avançado — clientes, produtos e período</h3>
-      <span class="chev">▾</span>
-    </div>
-    <div class="filter-body" id="filterBody">
-      <div class="seg-control" id="periodModeControl">
-        <button data-mode="mesano" class="active">Mês / Ano</button>
-        <button data-mode="range">Intervalo livre</button>
-        <button data-mode="all">Tudo</button>
-      </div>
+<footer>
+  <a class="crm-btn blue" href="https://williamvidalrepresenta.github.io/vidal-crm/">Clientes</a>
+  <a class="crm-btn green" href="https://docs.google.com/spreadsheets/d/1PdHOjDUI4MnjUgI53uWuyndVT1rnmUtfHtl3IAfKQnA/edit?gid=1638622237#gid=1638622237">CRM Vidal</a>
+  <a class="crm-btn red" href="https://williamvidalrepresenta.github.io/vidal-vendas/">Pedidos</a>
+</footer>
 
-      <div id="periodMesAno">
-        <div class="field-row">
-          <div>
-            <label class="field-label">Ano</label>
-            <select id="filterYear"></select>
-          </div>
-          <div>
-            <label class="field-label">Mês</label>
-            <select id="filterMonth"></select>
-          </div>
-        </div>
-      </div>
-
-      <div id="periodRange" style="display:none;">
-        <div class="field-row">
-          <div>
-            <label class="field-label">De</label>
-            <input type="date" id="filterDateFrom">
-          </div>
-          <div>
-            <label class="field-label">Até</label>
-            <input type="date" id="filterDateTo">
-          </div>
-        </div>
-      </div>
-
-      <label class="field-label">Empresa</label>
-      <div class="brand-toggles" id="filterBrandToggles"></div>
-
-      <div class="field-row" style="margin-top:6px;">
-        <div>
-          <label class="field-label">Cliente (opcional)</label>
-          <input type="text" id="filterClient" placeholder="Nome do cliente…" list="clientDatalist">
-          <datalist id="clientDatalist"></datalist>
-        </div>
-      </div>
-
-      <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
-    </div>
-  </div>
-
-  <div class="card" id="yearCompareCard" style="display:none;">
-    <h3 id="yearCompareTitle">Comparativo por ano</h3>
-    <div id="yearCompareList"></div>
-  </div>
-
-  <div class="card">
-    <h3>Top clientes no período</h3>
-    <div id="topClientesList"><div class="loader-inline"><div class="spinner"></div>carregando…</div></div>
-  </div>
-
-  <div class="card">
-    <h3>Top produtos no período</h3>
-    <div id="topProdutosList"><div class="loader-inline"><div class="spinner"></div>carregando…</div></div>
-  </div>
-
-</div>
-
-<!-- ================= CLIENTES ================= -->
-<div class="view" id="view-clientes">
-  <div class="card" id="clienteSearchCard">
-    <div class="search-box">
-      <span class="icon">⌕</span>
-      <input type="text" id="clientSearchInput" placeholder="Buscar cliente pelo nome…" oninput="onClientSearchInput()">
-    </div>
-    <div class="suggest-list" id="clientSuggestList"></div>
-  </div>
-
-  <div id="clienteDetailWrap" style="display:none;"></div>
-</div>
-
-<!-- ================= PRODUTOS ================= -->
-<div class="view" id="view-produtos">
-  <div class="card">
-    <div class="search-box">
-      <span class="icon">⌕</span>
-      <input type="text" id="productSearchInput" placeholder="Código ou nome do produto…" oninput="onProductSearchInput()">
-    </div>
-    <div id="productResultsMeta" style="font-size:12px; color:var(--color-text-muted); margin-top:2px;"></div>
-  </div>
-  <div id="productResultsList"></div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="bottom-nav">
-  <button class="nav-btn active" data-view="dashboard" onclick="switchView('dashboard')">
-    <span class="nav-icon">▤</span><span class="nav-label">Dashboard</span>
-  </button>
-  <button class="nav-btn" data-view="clientes" onclick="switchView('clientes')">
-    <span class="nav-icon">☰</span><span class="nav-label">Clientes</span>
-  </button>
-  <button class="nav-btn" data-view="produtos" onclick="switchView('produtos')">
-    <span class="nav-icon">◫</span><span class="nav-label">Produtos</span>
-  </button>
-</div>
-
-<script>
-/* ============================================================
-   CONFIG
-   ============================================================ */
-const SHEET_ID = '1PdHOjDUI4MnjUgI53uWuyndVT1rnmUtfHtl3IAfKQnA';
-const API_KEY  = 'AIzaSyBKx2uAruy9ydCYQDx0AkLhRBpCIc6VKZ4';
-const RANGE    = 'Vendas!A2:R';
-const CACHE_KEY = 'vendasVidal_cache_v1';
-
-const EMPRESAS = {
-  R: { nome: 'Rothenberger', cor: 'var(--brand-R)' },
-  C: { nome: 'Chiaperini',   cor: 'var(--brand-C)' },
-  T: { nome: 'Techto',       cor: 'var(--brand-T)' },
-  P: { nome: 'Presto',       cor: 'var(--brand-P)' },
-  H: { nome: 'Horbach',      cor: 'var(--brand-H)' },
-};
-const EMPRESA_CODES = ['R','C','T','P','H'];
-
-const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
-/* ============================================================
-   STATE
-   ============================================================ */
-let orders = [];         // array of order objects
-let clientIndex = {};    // nome -> array of orders (ref to same objects), sorted desc by data
-let allClientNames = [];
-let dataReady = false;
-
-let dashboardMonth = new Date().getMonth(); // 0-11
-let dashboardYear = new Date().getFullYear();
-
-let filterMode = 'mesano'; // mesano | range | all
-let filterBrands = new Set(EMPRESA_CODES); // active brands
-let filterClientName = '';
-
-let currentClientOpen = null;
-
-/* ============================================================
-   UTIL
-   ============================================================ */
-function fmtBRL(n){
-  if (n === null || n === undefined || isNaN(n)) n = 0;
-  return 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-function fmtBRLShort(n){
-  if (n === null || n === undefined || isNaN(n)) n = 0;
-  if (Math.abs(n) >= 1000000) return 'R$ ' + (n/1000000).toLocaleString('pt-BR',{maximumFractionDigits:1}) + 'M';
-  if (Math.abs(n) >= 1000) return 'R$ ' + (n/1000).toLocaleString('pt-BR',{maximumFractionDigits:1}) + 'k';
-  return fmtBRL(n);
-}
-function fmtDate(d){
-  if (!d) return '—';
-  return d.toLocaleDateString('pt-BR');
-}
-function fmtDateLong(d){
-  if (!d) return '—';
-  return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'});
-}
-function serialToDate(serial){
-  if (typeof serial === 'number'){
-    const ms = (serial - 25569) * 86400 * 1000;
-    return new Date(ms);
-  }
-  if (typeof serial === 'string' && serial.includes('/')){
-    const parts = serial.split('/');
-    if (parts.length === 3) return new Date(+parts[2], +parts[1]-1, +parts[0]);
-  }
-  return null;
-}
-function toNum(v){
-  if (typeof v === 'number') return v;
-  if (typeof v === 'string'){
-    const cleaned = v.replace(/\./g,'').replace(',', '.').replace(/[^\d.-]/g,'');
-    const n = parseFloat(cleaned);
-    return isNaN(n) ? 0 : n;
-  }
-  return 0;
-}
-function normalize(str){
-  return (str || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-}
-function showToast(msg, ms=2400){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(()=> t.classList.remove('show'), ms);
-}
-
-/* ============================================================
-   DATA LOADING
-   ============================================================ */
-async function fetchFromSheets(timeoutMs = 9000){
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(RANGE)}?valueRenderOption=UNFORMATTED_VALUE&key=${API_KEY}`;
-  const controller = new AbortController();
-  const timer = setTimeout(()=> controller.abort(), timeoutMs);
-  try{
-    const res = await fetch(url, {signal: controller.signal});
-    clearTimeout(timer);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const json = await res.json();
-    return json.values || [];
-  } catch(err){
-    clearTimeout(timer);
-    throw err;
-  }
-}
-
-function parseValues(values){
-  if (!values || values.length < 2) return [];
-  const headers = values[0];
-  const idx = {};
-  headers.forEach((h, i) => { idx[String(h).trim()] = i; });
-
-  const need = (name) => idx[name] !== undefined ? idx[name] : -1;
-  const cData = need('Data'), cPedido = need('Nº Pedido'), cStatus = need('Status'),
-        cCliente = need('Cliente'), cCodigo = need('Cód. Produto'), cProduto = need('Produto'),
-        cQtde = need('Qtde'), cValorUnit = need('Vlr. Unit.'), cTotalProd = need('Total/Prod.'),
-        cTotalSemImp = need('Total s/Imp.'), cTotalComImp = need('Total c/Imp.'),
-        cCondPag = need('Cond. Pagamento'), cTipoComissao = need('Tipo Comissão'),
-        cEmpresa = need('Empresa'), cCategoria = need('Categoria Item'), cGrupo = need('Grupo Pedido');
-
-  const ordersMap = {};
-
-  for (let r = 1; r < values.length; r++){
-    const row = values[r];
-    if (!row || row.length === 0) continue;
-    const cliente = row[cCliente];
-    const grupo = row[cGrupo];
-    if (!cliente && (grupo === undefined || grupo === '' || grupo === null)) continue;
-    if (grupo === undefined || grupo === '' || grupo === null) continue;
-
-    const grupoKey = String(grupo);
-    let order = ordersMap[grupoKey];
-    if (!order){
-      order = {
-        grupo: grupoKey,
-        pedido: row[cPedido] || null,
-        status: row[cStatus] || null,
-        cliente: cliente || '',
-        data: serialToDate(row[cData]),
-        empresa: row[cEmpresa] || '',
-        condPagamento: row[cCondPag] || '',
-        tipoComissao: row[cTipoComissao] || '',
-        totalSemImp: toNum(row[cTotalSemImp]),
-        totalComImp: toNum(row[cTotalComImp]),
-        itens: []
-      };
-      ordersMap[grupoKey] = order;
-    }
-    order.itens.push({
-      codigo: row[cCodigo] !== undefined ? String(row[cCodigo]) : '',
-      produto: row[cProduto] || '',
-      qtde: toNum(row[cQtde]),
-      valorUnit: toNum(row[cValorUnit]),
-      totalProd: toNum(row[cTotalProd]),
-      categoria: row[cCategoria] || ''
-    });
-  }
-
-  return Object.values(ordersMap);
-}
-
-function buildIndexes(){
-  orders.sort((a,b) => (b.data?.getTime()||0) - (a.data?.getTime()||0));
-  clientIndex = {};
-  orders.forEach(o => {
-    if (!o.cliente) return;
-    if (!clientIndex[o.cliente]) clientIndex[o.cliente] = [];
-    clientIndex[o.cliente].push(o);
-  });
-  allClientNames = Object.keys(clientIndex).sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  const dl = document.getElementById('clientDatalist');
-  dl.innerHTML = allClientNames.map(n => `<option value="${escapeHtml(n)}">`).join('');
-}
-
-function escapeHtml(s){
-  return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-async function loadData(forceRemote){
-  setSyncState('loading');
-  let usedCache = false;
-  try{
-    const values = await fetchFromSheets();
-    orders = parseValues(values);
-    buildIndexes();
-    dataReady = true;
-    try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), values }));
-    }catch(e){ /* storage quota - ignore */ }
-    setSyncState('online');
-    renderAll();
-  }catch(err){
-    usedCache = true;
-    const cached = readCache();
-    if (cached){
-      orders = parseValues(cached.values);
-      buildIndexes();
-      dataReady = true;
-      setSyncState('offline', cached.timestamp);
-      renderAll();
-      if (forceRemote) showToast('Sem conexão — mostrando dados salvos');
-    } else {
-      setSyncState('error');
-      showToast('Não consegui carregar os dados. Verifique sua internet.');
-    }
-  }
-}
-
-function readCache(){
-  try{
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  }catch(e){ return null; }
-}
-
-function setSyncState(state, cacheTimestamp){
-  const dot = document.getElementById('syncDot');
-  const label = document.getElementById('syncLabel');
-  const sub = document.getElementById('headerSubtitle');
-  dot.className = 'sync-dot';
-  if (state === 'loading'){
-    dot.classList.add('loading');
-    label.textContent = 'Sincronizando';
-    sub.textContent = 'atualizando…';
-  } else if (state === 'online'){
-    label.textContent = 'Atualizado';
-    sub.textContent = orders.length + ' pedidos · agora';
-  } else if (state === 'offline'){
-    dot.classList.add('offline');
-    label.textContent = 'Offline';
-    const when = cacheTimestamp ? new Date(cacheTimestamp).toLocaleString('pt-BR') : '—';
-    sub.textContent = 'dados de ' + when;
-  } else if (state === 'error'){
-    dot.classList.add('error');
-    label.textContent = 'Erro';
-    sub.textContent = 'toque para tentar de novo';
-  }
-}
-
-function manualRefresh(){
-  showToast('Atualizando…', 1400);
-  loadData(true);
-}
-
-/* ============================================================
-   NAVIGATION
-   ============================================================ */
-function switchView(name){
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
-}
-
-/* ============================================================
-   DASHBOARD
-   ============================================================ */
-function shiftMonth(delta){
-  dashboardMonth += delta;
-  if (dashboardMonth < 0){ dashboardMonth = 11; dashboardYear--; }
-  if (dashboardMonth > 11){ dashboardMonth = 0; dashboardYear++; }
-  renderDashboardKpi();
-}
-
-function ordersInMonth(year, month){
-  return orders.filter(o => o.data && o.data.getFullYear() === year && o.data.getMonth() === month);
-}
-
-function renderDashboardKpi(){
-  document.getElementById('monthLabel').textContent = MESES[dashboardMonth] + ' ' + dashboardYear;
-
-  const thisMonthOrders = ordersInMonth(dashboardYear, dashboardMonth);
-  const total = thisMonthOrders.reduce((s,o) => s + o.totalComImp, 0);
-
-  let prevMonth = dashboardMonth - 1, prevYear = dashboardYear;
-  if (prevMonth < 0){ prevMonth = 11; prevYear--; }
-  const prevOrders = ordersInMonth(prevYear, prevMonth);
-  const prevTotal = prevOrders.reduce((s,o) => s + o.totalComImp, 0);
-
-  document.getElementById('kpiTotal').textContent = fmtBRL(total);
-  document.getElementById('kpiOrdersCount').textContent = thisMonthOrders.length + ' pedido' + (thisMonthOrders.length===1?'':'s') + ' (total com impostos)';
-
-  const deltaEl = document.getElementById('kpiDelta');
-  if (prevTotal > 0){
-    const pct = ((total - prevTotal) / prevTotal) * 100;
-    deltaEl.className = 'kpi-delta ' + (pct > 0.5 ? 'up' : pct < -0.5 ? 'down' : 'flat');
-    const arrow = pct > 0.5 ? '▲' : pct < -0.5 ? '▼' : '—';
-    deltaEl.textContent = `${arrow} ${Math.abs(pct).toFixed(1)}% vs ${MESES[prevMonth]}`;
-  } else {
-    deltaEl.className = 'kpi-delta flat';
-    deltaEl.textContent = 'sem dados em ' + MESES[prevMonth] + ' p/ comparar';
-  }
-
-  const byBrand = {};
-  EMPRESA_CODES.forEach(c => byBrand[c] = 0);
-  thisMonthOrders.forEach(o => { if (byBrand[o.empresa] !== undefined) byBrand[o.empresa] += o.totalComImp; });
-  const bb = document.getElementById('brandBreakdown');
-  bb.innerHTML = EMPRESA_CODES.map(c => `
-    <div class="brand-chip">
-      <span class="brand-dot" style="background:${EMPRESAS[c].cor}"></span>
-      <span>${c}</span>
-      <span class="val">${fmtBRLShort(byBrand[c])}</span>
-    </div>
-  `).join('');
-}
-
-function toggleFilter(){
-  document.getElementById('filterToggle').classList.toggle('open');
-  document.getElementById('filterBody').classList.toggle('open');
-}
-
-function populateFilterControls(){
-  const yearSel = document.getElementById('filterYear');
-  const years = new Set(orders.map(o => o.data ? o.data.getFullYear() : null).filter(Boolean));
-  const nowY = new Date().getFullYear();
-  years.add(nowY);
-  const sortedYears = Array.from(years).sort((a,b)=>b-a);
-  yearSel.innerHTML = `<option value="all">Todos os anos</option>` + sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
-  yearSel.value = String(nowY);
-
-  const monthSel = document.getElementById('filterMonth');
-  monthSel.innerHTML = `<option value="all">Todos os meses</option>` + MESES.map((m,i) => `<option value="${i}">${m}</option>`).join('');
-
-  const bt = document.getElementById('filterBrandToggles');
-  bt.innerHTML = EMPRESA_CODES.map(c => `
-    <div class="brand-toggle active" data-code="${c}" style="background:${EMPRESAS[c].cor}" onclick="toggleBrandFilter('${c}')">${c}</div>
-  `).join('');
-  applyBrandToggleStyles();
-}
-
-function toggleBrandFilter(code){
-  if (filterBrands.has(code)) filterBrands.delete(code); else filterBrands.add(code);
-  if (filterBrands.size === 0) filterBrands = new Set(EMPRESA_CODES);
-  applyBrandToggleStyles();
-  renderFilteredSections();
-}
-function applyBrandToggleStyles(){
-  document.querySelectorAll('.brand-toggle').forEach(el => {
-    const code = el.dataset.code;
-    const active = filterBrands.has(code);
-    el.classList.toggle('active', active);
-    el.style.background = active ? EMPRESAS[code].cor : 'var(--color-surface)';
-    el.style.color = active ? '#fff' : 'var(--color-text-muted)';
-    el.style.borderColor = active ? 'transparent' : 'var(--color-border)';
-  });
-}
-
-function clearFilters(){
-  filterBrands = new Set(EMPRESA_CODES);
-  filterClientName = '';
-  document.getElementById('filterClient').value = '';
-  document.getElementById('filterYear').value = String(new Date().getFullYear());
-  document.getElementById('filterMonth').value = String(new Date().getMonth());
-  document.querySelectorAll('#periodModeControl button').forEach((b,i) => b.classList.toggle('active', i===0));
-  filterMode = 'mesano';
-  document.getElementById('periodMesAno').style.display = '';
-  document.getElementById('periodRange').style.display = 'none';
-  applyBrandToggleStyles();
-  renderFilteredSections();
-}
-
-function getFilteredOrders(){
-  let list = orders;
-
-  if (filterMode === 'mesano'){
-    const y = document.getElementById('filterYear').value;
-    const m = document.getElementById('filterMonth').value;
-    if (y !== 'all') list = list.filter(o => o.data && o.data.getFullYear() === Number(y));
-    if (m !== 'all') list = list.filter(o => o.data && o.data.getMonth() === Number(m));
-  } else if (filterMode === 'range'){
-    const from = document.getElementById('filterDateFrom').value;
-    const to = document.getElementById('filterDateTo').value;
-    if (from) list = list.filter(o => o.data && o.data >= new Date(from));
-    if (to) list = list.filter(o => o.data && o.data <= new Date(to + 'T23:59:59'));
-  }
-  // mode 'all' -> no date filtering
-
-  if (filterBrands.size < EMPRESA_CODES.length){
-    list = list.filter(o => filterBrands.has(o.empresa));
-  }
-  if (filterClientName){
-    const nc = normalize(filterClientName);
-    list = list.filter(o => normalize(o.cliente).includes(nc));
-  }
-  return list;
-}
-
-function renderFilteredSections(){
-  const list = getFilteredOrders();
-  renderYearCompare();
-  renderTopClientes(list);
-  renderTopProdutos(list);
-}
-
-function renderYearCompare(){
-  const card = document.getElementById('yearCompareCard');
-  const y = document.getElementById('filterYear')?.value;
-  const m = document.getElementById('filterMonth')?.value;
-  if (filterMode !== 'mesano' || y !== 'all' || m === 'all'){
-    card.style.display = 'none';
-    return;
-  }
-  const monthNum = Number(m);
-  const byYear = {};
-  orders.forEach(o => {
-    if (!o.data || o.data.getMonth() !== monthNum) return;
-    if (filterBrands.size < EMPRESA_CODES.length && !filterBrands.has(o.empresa)) return;
-    if (filterClientName && !normalize(o.cliente).includes(normalize(filterClientName))) return;
-    const yr = o.data.getFullYear();
-    byYear[yr] = (byYear[yr]||0) + o.totalComImp;
-  });
-  const years = Object.keys(byYear).sort((a,b)=>b-a);
-  if (years.length === 0){ card.style.display = 'none'; return; }
-  card.style.display = '';
-  document.getElementById('yearCompareTitle').textContent = `${MESES[monthNum]} — comparativo entre anos`;
-  document.getElementById('yearCompareList').innerHTML = years.map(y => `
-    <div class="year-compare-row"><span class="yr">${y}</span><span class="v">${fmtBRL(byYear[y])}</span></div>
-  `).join('');
-}
-
-function renderTopClientes(list){
-  const byClient = {};
-  list.forEach(o => {
-    if (!o.cliente) return;
-    if (!byClient[o.cliente]) byClient[o.cliente] = {total:0, pedidos:0};
-    byClient[o.cliente].total += o.totalComImp;
-    byClient[o.cliente].pedidos += 1;
-  });
-  const arr = Object.entries(byClient).sort((a,b) => b[1].total - a[1].total).slice(0,10);
-  const el = document.getElementById('topClientesList');
-  if (arr.length === 0){
-    el.innerHTML = `<div class="empty-state"><span class="big">—</span>Nenhuma venda encontrada com esses filtros.</div>`;
-    return;
-  }
-  el.innerHTML = arr.map(([nome, d], i) => `
-    <div class="rank-row" onclick="openClientFromDashboard('${escapeHtml(nome).replace(/'/g,"\\'")}')" style="cursor:pointer;">
-      <div class="rank-num">${i+1}</div>
-      <div class="rank-info">
-        <div class="rank-name">${escapeHtml(nome)}</div>
-        <div class="rank-sub">${d.pedidos} pedido${d.pedidos===1?'':'s'}</div>
-      </div>
-      <div class="rank-val">${fmtBRLShort(d.total)}</div>
-    </div>
-  `).join('');
-}
-
-function renderTopProdutos(list){
-  const byProd = {};
-  list.forEach(o => {
-    o.itens.forEach(it => {
-      const key = (it.codigo || '') + '|' + it.produto;
-      if (!byProd[key]) byProd[key] = {produto: it.produto, codigo: it.codigo, total:0, qtde:0};
-      byProd[key].total += it.totalProd;
-      byProd[key].qtde += it.qtde;
-    });
-  });
-  const arr = Object.values(byProd).sort((a,b) => b.total - a.total).slice(0,10);
-  const el = document.getElementById('topProdutosList');
-  if (arr.length === 0){
-    el.innerHTML = `<div class="empty-state"><span class="big">—</span>Nenhum produto encontrado com esses filtros.</div>`;
-    return;
-  }
-  el.innerHTML = arr.map((d, i) => `
-    <div class="rank-row">
-      <div class="rank-num">${i+1}</div>
-      <div class="rank-info">
-        <div class="rank-name">${escapeHtml(d.produto)}</div>
-        <div class="rank-sub">Cód. ${escapeHtml(d.codigo)} · ${d.qtde.toLocaleString('pt-BR')} un.</div>
-      </div>
-      <div class="rank-val">${fmtBRLShort(d.total)} <span style="font-size:9.5px; color:var(--color-text-faint); font-weight:500;">s/imp.</span></div>
-    </div>
-  `).join('');
-}
-
-function openClientFromDashboard(nome){
-  switchView('clientes');
-  document.getElementById('clientSearchInput').value = nome;
-  showClientDetail(nome);
-}
-
-/* ============================================================
-   CLIENTES
-   ============================================================ */
-function onClientSearchInput(){
-  const q = document.getElementById('clientSearchInput').value;
-  const list = document.getElementById('clientSuggestList');
-  const detailWrap = document.getElementById('clienteDetailWrap');
-  if (!q.trim()){
-    list.innerHTML = '';
-    detailWrap.style.display = 'none';
-    return;
-  }
-  const nq = normalize(q);
-  const matches = allClientNames.filter(n => normalize(n).includes(nq)).slice(0, 8);
-  if (matches.length === 1 && normalize(matches[0]) === nq){
-    list.innerHTML = '';
-    showClientDetail(matches[0]);
-    return;
-  }
-  detailWrap.style.display = 'none';
-  list.innerHTML = matches.map(n => {
-    const co = clientIndex[n];
-    const last = co[0];
-    return `<div class="suggest-item" onclick="selectClientSuggestion('${n.replace(/'/g,"\\'")}')">
-      <div class="name">${escapeHtml(n)}</div>
-      <div class="meta">${co.length} pedido${co.length===1?'':'s'} · última compra ${fmtDate(last.data)}</div>
-    </div>`;
-  }).join('') || `<div class="empty-state">Nenhum cliente encontrado.</div>`;
-}
-
-function selectClientSuggestion(nome){
-  document.getElementById('clientSearchInput').value = nome;
-  document.getElementById('clientSuggestList').innerHTML = '';
-  showClientDetail(nome);
-}
-
-function showClientDetail(nome){
-  const clientOrders = clientIndex[nome];
-  const wrap = document.getElementById('clienteDetailWrap');
-  if (!clientOrders){
-    wrap.style.display = 'none';
-    return;
-  }
-  currentClientOpen = nome;
-  wrap.style.display = 'block';
-
-  const lastOverall = clientOrders[0];
-  const lastByEmpresa = {};
-  EMPRESA_CODES.forEach(c => { lastByEmpresa[c] = clientOrders.find(o => o.empresa === c) || null; });
-
-  const totalGeral = clientOrders.reduce((s,o) => s + o.totalComImp, 0);
-
-  wrap.innerHTML = `
-    <div class="card">
-      <div class="client-header">
-        <h2>${escapeHtml(nome)}</h2>
-      </div>
-      <div class="kpi-sub">${clientOrders.length} pedido${clientOrders.length===1?'':'s'} no total · ${fmtBRL(totalGeral)} (com impostos)</div>
-      <div class="kpi-sub" style="margin-top:6px;">Última compra: <strong>${fmtDateLong(lastOverall.data)}</strong> — Empresa ${lastOverall.empresa} — ${fmtBRL(lastOverall.totalComImp)}</div>
-
-      <div class="company-grid">
-        ${EMPRESA_CODES.map(c => {
-          const o = lastByEmpresa[c];
-          return `<div class="company-cell ${o?'':'empty'}">
-            <div class="letter" style="background:${EMPRESAS[c].cor}">${c}</div>
-            <div class="date">${o ? fmtDate(o.data) : 'sem registro'}</div>
-            ${o ? `<div class="val">${fmtBRLShort(o.totalComImp)}</div>` : ''}
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Histórico de pedidos</h3>
-      <div id="clientOrdersList">
-        ${clientOrders.map(o => renderOrderItemHtml(o)).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderOrderItemHtml(o){
-  const itemsHtml = o.itens.map(it => `
-    <div class="order-line">
-      <div class="p-name">${escapeHtml(it.produto)}<div class="p-code">Cód. ${escapeHtml(it.codigo)} · ${escapeHtml(it.categoria)}</div></div>
-      <div class="p-num">${it.qtde.toLocaleString('pt-BR')} × ${fmtBRL(it.valorUnit)}<br>${fmtBRL(it.totalProd)}</div>
-    </div>
-  `).join('');
-  return `
-    <div class="order-item" id="order-${o.grupo}">
-      <div class="order-item-head" onclick="toggleOrder('${o.grupo}')">
-        <span class="order-brand-dot" style="background:${EMPRESAS[o.empresa] ? EMPRESAS[o.empresa].cor : '#999'}"></span>
-        <div class="order-item-main">
-          <div class="order-item-date">${fmtDate(o.data)} ${o.pedido ? '· Pedido ' + escapeHtml(String(o.pedido)) : ''}</div>
-          <div class="order-item-meta">${o.itens.length} item${o.itens.length===1?'':'s'} · ${escapeHtml(o.condPagamento||'')}</div>
-        </div>
-        <div class="order-item-total">${fmtBRL(o.totalComImp)}</div>
-        <span class="order-item-chev">▾</span>
-      </div>
-      <div class="order-item-body">${itemsHtml}</div>
-    </div>
-  `;
-}
-
-function toggleOrder(grupo){
-  const el = document.getElementById('order-' + grupo);
-  if (el) el.classList.toggle('open');
-}
-
-/* ============================================================
-   PRODUTOS
-   ============================================================ */
-let productSearchDebounce = null;
-function onProductSearchInput(){
-  clearTimeout(productSearchDebounce);
-  productSearchDebounce = setTimeout(runProductSearch, 150);
-}
-
-function runProductSearch(){
-  const qRaw = document.getElementById('productSearchInput').value.trim();
-  const meta = document.getElementById('productResultsMeta');
-  const listEl = document.getElementById('productResultsList');
-  if (!qRaw){
-    meta.textContent = '';
-    listEl.innerHTML = '';
-    return;
-  }
-  const q = normalize(qRaw);
-  const results = [];
-  orders.forEach(o => {
-    o.itens.forEach(it => {
-      const codigoNorm = normalize(it.codigo);
-      const nomeNorm = normalize(it.produto);
-      if (codigoNorm.includes(q) || nomeNorm.includes(q)){
-        results.push({ order: o, item: it });
-      }
-    });
-  });
-  results.sort((a,b) => (b.order.data?.getTime()||0) - (a.order.data?.getTime()||0));
-
-  meta.textContent = results.length + ' ocorrência' + (results.length===1?'':'s') + ' encontrada' + (results.length===1?'':'s');
-
-  if (results.length === 0){
-    listEl.innerHTML = `<div class="empty-state"><span class="big">—</span>Nenhum produto encontrado com esse código ou nome.</div>`;
-    return;
-  }
-
-  listEl.innerHTML = results.slice(0, 150).map(({order,item}) => `
-    <div class="prod-result">
-      <div class="prod-result-top">
-        <span class="prod-client">${escapeHtml(order.cliente)}</span>
-        <span class="prod-total">${fmtBRL(item.totalProd)}</span>
-      </div>
-      <div class="prod-meta">
-        ${escapeHtml(item.produto)} · Cód. ${escapeHtml(item.codigo)}<br>
-        ${fmtDate(order.data)} · Empresa ${order.empresa} · ${item.qtde.toLocaleString('pt-BR')} un. × ${fmtBRL(item.valorUnit)}
-        ${order.pedido ? ' · Pedido ' + escapeHtml(String(order.pedido)) : ''}
-      </div>
-    </div>
-  `).join('');
-}
-
-/* ============================================================
-   BOOTSTRAP
-   ============================================================ */
-function setupFilterEvents(){
-  document.querySelectorAll('#periodModeControl button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#periodModeControl button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filterMode = btn.dataset.mode;
-      document.getElementById('periodMesAno').style.display = filterMode === 'mesano' ? '' : 'none';
-      document.getElementById('periodRange').style.display = filterMode === 'range' ? '' : 'none';
-      renderFilteredSections();
-    });
-  });
-  document.getElementById('filterYear').addEventListener('change', renderFilteredSections);
-  document.getElementById('filterMonth').addEventListener('change', renderFilteredSections);
-  document.getElementById('filterDateFrom').addEventListener('change', renderFilteredSections);
-  document.getElementById('filterDateTo').addEventListener('change', renderFilteredSections);
-  document.getElementById('filterClient').addEventListener('input', (e) => {
-    filterClientName = e.target.value;
-    renderFilteredSections();
-  });
-}
-
-function renderAll(){
-  populateFilterControls();
-  renderDashboardKpi();
-  renderFilteredSections();
-  if (currentClientOpen && clientIndex[currentClientOpen]){
-    showClientDetail(currentClientOpen);
-  }
-}
-
-setupFilterEvents();
-loadData(false);
-</script>
 </body>
 </html>
