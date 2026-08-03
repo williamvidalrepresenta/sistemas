@@ -14,7 +14,7 @@
     }
     * { box-sizing:border-box; }
     html,body { margin:0; background:linear-gradient(180deg,#fff 0%,#f3faf6 100%); color:var(--text); font-family:Arial,Helvetica,sans-serif; }
-    body.presentation .helper, body.presentation .micro, body.presentation .field-actions, body.presentation .draft-note, body.presentation .no-print { display:none !important; }
+    
     button,input,select,textarea { font:inherit; }
     .app { max-width:1600px; margin:0 auto; padding:18px; display:grid; gap:16px; }
     .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
@@ -65,8 +65,7 @@
     .suggestion strong { color:var(--ok); }
     .suggestion-cat { padding:6px 12px; background:#f7faf8; color:#1f5b3d; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #e6efe9; position:sticky; top:0; }
     .suggestion-empty { padding:10px 12px; color:var(--muted); }
-    .exit-presentation { position:fixed; top:14px; right:14px; z-index:9999; background:var(--brand); color:#fff; border:0; padding:10px 16px; border-radius:999px; box-shadow:var(--shadow); cursor:pointer; font-weight:700; display:none; }
-    body.presentation .exit-presentation { display:inline-flex; }
+    
     .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:16px; background:#fff; }
     table { width:100%; min-width:980px; border-collapse:collapse; }
     th,td { padding:10px 10px; border-bottom:1px solid #f3e8e2; vertical-align:top; text-align:left; font-size:.92rem; }
@@ -124,8 +123,7 @@
   </style>
 </head>
 <body>
-  <button type="button" class="exit-presentation" id="exitPresentation">✕ Sair da apresentação</button>
-  <div class="app" id="app">
+    <div class="app" id="app">
     <div class="bar no-print">
       <div class="brand">
         <div class="brand-badge">
@@ -138,7 +136,6 @@
         </div>
       </div>
       <div class="toolbar-actions">
-        <button class="btn btn-discreet" id="presentationToggle">Modo apresentação</button>
         <button class="btn btn-discreet" id="historyBtn">Histórico</button>
         <button class="btn btn-discreet" id="settingsBtn">Configurações</button>
         <button class="btn btn-discreet" id="clearAllBtn" title="Limpar pedido atual">🧹 Limpar</button>
@@ -451,7 +448,7 @@
     const CLOUD_URL = 'https://script.google.com/macros/s/AKfycbx74X5tMLPF8FyI7J-K0asVNLDfZeAbR2o1HkBVlKXV12doV11UhBII3Ibh8zBD7PGnvg/exec';
 
     const state = {
-      presentationMode:false, sortState:0, manualGrandTotal:null,
+      sortState:0, manualGrandTotal:null,
       saleType:'revenda', paymentCondition:'outro', freightType:'cif', resaleDiscount:CONFIGURACOES.descontos.revendaInicial,
       client:Object.fromEntries(CLIENT_FIELDS.map(([k,, ,auto])=>[k, k==='seller'?CONFIGURACOES.comportamento.vendedorPadrao : (k==='date'?todayISO():'')])),
       clientManualLocks:{}, items:[], notes:''
@@ -624,13 +621,6 @@
       // (autocomplete cliente: listener registrado mais abaixo)
       els.itemSearch.addEventListener('input', handleSearchInput);
       els.itemSearch.addEventListener('keydown', handleSearchEnter);
-      const togglePresentation = () => {
-        state.presentationMode = !state.presentationMode;
-        document.body.classList.toggle('presentation', state.presentationMode);
-        q('#presentationToggle').textContent = state.presentationMode ? 'Modo edição' : 'Modo apresentação';
-      };
-      q('#presentationToggle').addEventListener('click', togglePresentation);
-      q('#exitPresentation').addEventListener('click', () => { if (state.presentationMode) togglePresentation(); });
       q('#addManualItemBtn').addEventListener('click', addManualItem);
       q('#sortToggle').addEventListener('click', cycleSort);
       els.policyToggle.addEventListener('click', () => toggleCollapse(els.policyToggle, els.policyContent, 'Exibir', 'Ocultar'));
@@ -1011,8 +1001,6 @@
       if (!raw) return;
       if (CONFIGURACOES.comportamento.confirmarRascunhoAoAbrir && !confirm('Existe um rascunho salvo. Deseja continuar?')) return;
       try { Object.assign(state, JSON.parse(raw)); } catch { return; }
-      document.body.classList.toggle('presentation', !!state.presentationMode);
-      q('#presentationToggle').textContent = state.presentationMode ? 'Modo edição' : 'Modo apresentação';
       els.saleType.value = state.saleType; els.paymentCondition.value = state.paymentCondition; els.freightType.value = state.freightType; els.resaleDiscount.value = state.resaleDiscount; els.draftStatus.textContent = 'Rascunho carregado';
       if (els.notesInput) els.notesInput.value = state.notes || '';
       // Reconstroi os inputs do dialog para refletir client carregado
@@ -1090,25 +1078,25 @@
       ].join('');
       win.document.write(`<!doctype html><html><head><title>${filename}</title><style>
         @page { size: ${orientation}; margin: 12mm; }
-        body{font-family:'Helvetica Neue',Arial,sans-serif;color:#231815;margin:0;background:linear-gradient(180deg,#fff 0%,#f3faf6 100%)}
-        .top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:18px;padding:16px 18px;background:linear-gradient(135deg,#e8f4ed,#fff);border:1px solid #c8e3d5;border-radius:20px;box-shadow:0 12px 30px rgba(23,114,69,.08)}
+        body{font-family:'Helvetica Neue',Arial,sans-serif;color:#231815;margin:0;background:#fff}
+        .top{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:18px;padding:16px 18px;background:#f3faf6;border:1px solid #c8e3d5;border-radius:12px}
         .logos img{height:48px;margin-right:12px}
         h1{font-size:24px;color:#177245;margin:0 0 4px;letter-spacing:-.01em}
         .sub{color:#6e625d;font-size:12px}
-        .meta{font-size:12px;color:#3d3a37;display:grid;grid-template-columns:repeat(2,1fr);gap:8px 18px;margin:14px 0;background:#fff;padding:14px 16px;border-radius:18px;border:1px solid #e0ebe4;box-shadow:0 10px 24px rgba(23,114,69,.06)}
+        .meta{font-size:12px;color:#3d3a37;display:grid;grid-template-columns:repeat(2,1fr);gap:8px 18px;margin:14px 0;background:#fff;padding:14px 16px;border-radius:12px;border:1px solid #e0ebe4}
         .meta strong{color:#1f5b3d}
-        .table-wrap{border:1px solid #e0ebe4;border-radius:18px;overflow:hidden;margin-top:6px;background:#fff;box-shadow:0 10px 24px rgba(23,114,69,.06)}
+        .table-wrap{border:1px solid #e0ebe4;border-radius:12px;overflow:hidden;margin-top:6px;background:#fff}
         table{width:100%;border-collapse:collapse;font-size:11px}
         th,td{border-bottom:1px solid #eef3ef;padding:9px 10px;vertical-align:top}
         tr:last-child td{border-bottom:none}
         th{background:#e8f4ed;color:#1f5b3d;text-transform:uppercase;font-size:10px;letter-spacing:.04em;text-align:left;border-bottom:1px solid #c8e3d5}
         .totals-wrap{display:flex;justify-content:flex-end;margin-top:18px}
-        .tot{min-width:320px;display:grid;gap:6px;font-size:13px;background:linear-gradient(135deg,#f3faf6,#fff);padding:16px 18px;border-radius:18px;border:1px solid #c8e3d5;box-shadow:0 10px 24px rgba(23,114,69,.06)}
+        .tot{min-width:320px;display:grid;gap:6px;font-size:13px;background:#f3faf6;padding:16px 18px;border-radius:12px;border:1px solid #c8e3d5}
         .tot .row{display:flex;justify-content:space-between;gap:14px}
         .tot .grand{font-size:16px;font-weight:800;color:#177245;border-top:1px solid #c8e3d5;padding-top:8px;margin-top:4px}
         .savings{margin-top:10px;font-size:12px;color:#177245;background:#e8f4ed;border:1px solid #b9dcc8;padding:8px 14px;border-radius:999px;display:inline-block;margin-right:8px;font-weight:700}
         .green{color:#177245;font-weight:700}
-        .notes-box{margin-top:18px;padding:14px 16px;border:1px solid #e0ebe4;background:#f7faf8;border-radius:18px;font-size:12px;box-shadow:0 10px 24px rgba(23,114,69,.05)}
+        .notes-box{margin-top:18px;padding:14px 16px;border:1px solid #e0ebe4;background:#f7faf8;border-radius:12px;font-size:12px}
         .notes-box strong{color:#177245}
         .footer{margin-top:18px;font-size:10px;color:#6e625d;text-align:center;padding-top:10px;border-top:1px solid #e0ebe4}
       </style></head><body>
