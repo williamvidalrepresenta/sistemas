@@ -402,6 +402,16 @@
   <dialog id="whatsDialog">
     <div class="modal">
       <div class="modal-head"><strong>Texto para WhatsApp</strong><button class="btn btn-discreet" data-close="whatsDialog">Fechar</button></div>
+      <div class="policy-grid" style="margin-bottom:10px">
+        <div>
+          <div class="label">Incluir cabeçalho (cliente, data, frete)</div>
+          <select class="select" id="whatsHeaderToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
+        </div>
+        <div>
+          <div class="label">Incluir totalizadores</div>
+          <select class="select" id="whatsTotalsToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
+        </div>
+      </div>
       <textarea id="whatsText" class="whats-box"></textarea>
       <div class="modal-actions"><button class="btn btn-primary" id="copyWhats">Copiar</button></div>
     </div>
@@ -467,7 +477,7 @@
       policyToggle:q('#policyToggle'), policyContent:q('#policyContent'), clientSummaryToggle:q('#clientSummaryToggle'), clientSummaryContent:q('#clientSummaryContent'), ipiTotalOnly:q('#ipiTotalOnly'), stTotalOnly:q('#stTotalOnly'),
       itemSearch:q('#itemSearch'), suggestions:q('#suggestions'), itemsBody:q('#itemsBody'), productCount:q('#productCount'), totalWithoutTax:q('#totalWithoutTax'), grandTotal:q('#grandTotal'), manualGrandWrap:q('#manualGrandWrap'), manualGrandInput:q('#manualGrandInput'), savingsBlock:q('#savingsBlock'),
       notesInput:q('#notesInput'),
-      clientDialog:q('#clientDialog'), clientFields:q('#clientFields'), saveDialog:q('#saveDialog'), whatsDialog:q('#whatsDialog'), whatsText:q('#whatsText'),
+      clientDialog:q('#clientDialog'), clientFields:q('#clientFields'), saveDialog:q('#saveDialog'), whatsDialog:q('#whatsDialog'), whatsText:q('#whatsText'), whatsHeaderToggle:q('#whatsHeaderToggle'), whatsTotalsToggle:q('#whatsTotalsToggle'),
       settingsDialog:q('#settingsDialog'), historyDialog:q('#historyDialog'), historyList:q('#historyList'), clientsList:q('#clientsList'), customItemsList:q('#customItemsList')
     };
 
@@ -629,6 +639,8 @@
       q('#saveBtn').addEventListener('click', () => els.saveDialog.showModal());
       q('#confirmExport').addEventListener('click', executeExport);
       q('#copyWhats').addEventListener('click', async () => { await navigator.clipboard.writeText(els.whatsText.value); alert('Texto copiado.'); });
+      els.whatsHeaderToggle.addEventListener('change', () => { els.whatsText.value = buildWhatsText(state.lastWhatsDocType || 'orcamento'); });
+      els.whatsTotalsToggle.addEventListener('change', () => { els.whatsText.value = buildWhatsText(state.lastWhatsDocType || 'orcamento'); });
       document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => q('#'+btn.dataset.close).close()));
       els.manualGrandInput.addEventListener('input', e => { state.manualGrandTotal = e.target.value === '' ? null : Number(e.target.value); renderTotals(); persistDraft(); });
       window.addEventListener('click', e => { if (!els.suggestions.contains(e.target) && e.target !== els.itemSearch) hideSuggestions(); if (!els.clientSuggestions.contains(e.target) && e.target !== els.clientNameHighlight) hideClientSuggestions(); });
@@ -1040,6 +1052,7 @@
       // Salva snapshot no histórico antes de exportar
       saveHistorySnapshot(docType);
       if (docFormat === 'whatsapp') {
+        state.lastWhatsDocType = docType;
         els.whatsText.value = buildWhatsText(docType);
         els.saveDialog.close(); els.whatsDialog.showModal(); return;
       }
@@ -1067,21 +1080,38 @@
     }
 
     function buildWhatsText(docType) {
+      const includeHeader = els.whatsHeaderToggle.value !== 'nao';
+      const includeTotals = els.whatsTotalsToggle.value !== 'nao';
       const title = docType === 'orcamento' ? 'ORÇAMENTO' : 'PEDIDO';
       const lines = [];
       lines.push(`*${title} TECHTO*`);
-      for (const [label, val] of getFilledOrderFields()) lines.push(`${label}: ${val}`);
+      if (includeHeader) {
+        const headerKeys = { name: 'Cliente', date: 'Data', freight: 'Frete' };
+        for (const [key, label] of Object.entries(headerKeys)) {
+          const v = state.client[key];
+          if (v == null || String(v).trim() === '') continue;
+          lines.push(`${label}: ${key === 'date' ? formatDateOnly(v) : v}`);
+        }
+      }
       lines.push('');
-      state.items.forEach((item, idx) => { const c = computeLine(item); lines.push(`${idx+1}. ${item.code || '—'} - ${item.description}`); lines.push(`   Qtd: ${item.qty} | Unit: ${formatMoney(c.unitWithoutTax)} | Total: ${formatMoney(c.totalWithTaxes)}`); if (item.hasSt) lines.push(`   ST: ${formatPercent(getStPercent(item))}`); });
-      lines.push('');
-      const s = computeSavings();
-      lines.push(`Subtotal sem imposto: ${els.totalWithoutTax.textContent}`);
-      lines.push(`IPI: ${els.ipiTotalOnly.textContent}`);
-      lines.push(`ST: ${els.stTotalOnly.textContent}`);
-      lines.push(`*Total c/ impostos: ${els.grandTotal.textContent}*`);
-      if (s.retiraSavings > 0) lines.push(`Economia Retira: ${formatMoney(s.retiraSavings)}`);
-      if (s.avistaSavings > 0) lines.push(`Economia À vista: ${formatMoney(s.avistaSavings)}`);
-      if (state.saleType === 'venda_direta') lines.push(`Comissão: ${els.commissionTotal.textContent}`);
+      state.items.forEach((item, idx) => {
+        // "Item N" deixa explícito que N é a posição na lista, não a quantidade do produto
+        lines.push(`*Item ${idx + 1}*`);
+        lines.push(`${item.code || '—'} - ${item.description}`);
+        if (includeTotals) lines.push(`Qtd: ${item.qty}`);
+        if (item.hasSt) lines.push(`ST: ${formatPercent(getStPercent(item))}`);
+      });
+      if (includeTotals) {
+        lines.push('');
+        const s = computeSavings();
+        lines.push(`Subtotal sem imposto: ${els.totalWithoutTax.textContent}`);
+        lines.push(`IPI: ${els.ipiTotalOnly.textContent}`);
+        lines.push(`ST: ${els.stTotalOnly.textContent}`);
+        lines.push(`*Total c/ impostos: ${els.grandTotal.textContent}*`);
+        if (s.retiraSavings > 0) lines.push(`Economia Retira: ${formatMoney(s.retiraSavings)}`);
+        if (s.avistaSavings > 0) lines.push(`Economia À vista: ${formatMoney(s.avistaSavings)}`);
+        if (state.saleType === 'venda_direta') lines.push(`Comissão: ${els.commissionTotal.textContent}`);
+      }
       lines.push('');
       lines.push('*Observações:*');
       lines.push(state.notes && state.notes.trim() ? state.notes.trim() : '—');
