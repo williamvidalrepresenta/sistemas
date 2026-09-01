@@ -405,11 +405,15 @@
       <div class="policy-grid" style="margin-bottom:10px">
         <div>
           <div class="label">Incluir cabeçalho (cliente, data, frete)</div>
-          <select class="select" id="whatsHeaderToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
+          <select class="select" id="whatsHeaderToggle"><option value="nao" selected>Não</option><option value="sim">Sim</option></select>
         </div>
         <div>
           <div class="label">Incluir totalizadores</div>
           <select class="select" id="whatsTotalsToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
+        </div>
+        <div>
+          <div class="label">Incluir ICMS</div>
+          <select class="select" id="whatsIcmsToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
         </div>
       </div>
       <textarea id="whatsText" class="whats-box"></textarea>
@@ -438,6 +442,16 @@
     function defaultApplyResaleDiscount(item) {
       const desc = String(item && item.description || '').toUpperCase();
       return EQUIPAMENTO_KEYWORDS.some(kw => desc.includes(kw));
+    }
+    // ICMS: 8,8% para compressores, reservatório vertical, secador e resfriador; 18% para os demais itens
+    const ICMS_REDUZIDO_KEYWORDS = ['COMPR.AR', 'COMPRESSOR', 'SECADOR', 'RESFRIADOR'];
+    function getIcmsPercent(item) {
+      const desc = String(item && item.description || '').toUpperCase();
+      const group = String(item && item.group || '').toUpperCase();
+      const texto = desc + ' ' + group;
+      const isReservatorioVertical = texto.includes('RESERVAT') && texto.includes('VERTICAL');
+      if (isReservatorioVertical || ICMS_REDUZIDO_KEYWORDS.some(kw => texto.includes(kw))) return 8.8;
+      return 18;
     }
     // Compatível com itens antigos (rascunhos/histórico salvos antes desta função existir),
     // que não possuem o campo applyResaleDiscount definido.
@@ -477,7 +491,7 @@
       policyToggle:q('#policyToggle'), policyContent:q('#policyContent'), clientSummaryToggle:q('#clientSummaryToggle'), clientSummaryContent:q('#clientSummaryContent'), ipiTotalOnly:q('#ipiTotalOnly'), stTotalOnly:q('#stTotalOnly'),
       itemSearch:q('#itemSearch'), suggestions:q('#suggestions'), itemsBody:q('#itemsBody'), productCount:q('#productCount'), totalWithoutTax:q('#totalWithoutTax'), grandTotal:q('#grandTotal'), manualGrandWrap:q('#manualGrandWrap'), manualGrandInput:q('#manualGrandInput'), savingsBlock:q('#savingsBlock'),
       notesInput:q('#notesInput'),
-      clientDialog:q('#clientDialog'), clientFields:q('#clientFields'), saveDialog:q('#saveDialog'), whatsDialog:q('#whatsDialog'), whatsText:q('#whatsText'), whatsHeaderToggle:q('#whatsHeaderToggle'), whatsTotalsToggle:q('#whatsTotalsToggle'),
+      clientDialog:q('#clientDialog'), clientFields:q('#clientFields'), saveDialog:q('#saveDialog'), whatsDialog:q('#whatsDialog'), whatsText:q('#whatsText'), whatsHeaderToggle:q('#whatsHeaderToggle'), whatsTotalsToggle:q('#whatsTotalsToggle'), whatsIcmsToggle:q('#whatsIcmsToggle'),
       settingsDialog:q('#settingsDialog'), historyDialog:q('#historyDialog'), historyList:q('#historyList'), clientsList:q('#clientsList'), customItemsList:q('#customItemsList')
     };
 
@@ -641,6 +655,7 @@
       q('#copyWhats').addEventListener('click', async () => { await navigator.clipboard.writeText(els.whatsText.value); alert('Texto copiado.'); });
       els.whatsHeaderToggle.addEventListener('change', () => { els.whatsText.value = buildWhatsText(state.lastWhatsDocType || 'orcamento'); });
       els.whatsTotalsToggle.addEventListener('change', () => { els.whatsText.value = buildWhatsText(state.lastWhatsDocType || 'orcamento'); });
+      els.whatsIcmsToggle.addEventListener('change', () => { els.whatsText.value = buildWhatsText(state.lastWhatsDocType || 'orcamento'); });
       document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => q('#'+btn.dataset.close).close()));
       els.manualGrandInput.addEventListener('input', e => { state.manualGrandTotal = e.target.value === '' ? null : Number(e.target.value); renderTotals(); persistDraft(); });
       window.addEventListener('click', e => { if (!els.suggestions.contains(e.target) && e.target !== els.itemSearch) hideSuggestions(); if (!els.clientSuggestions.contains(e.target) && e.target !== els.clientNameHighlight) hideClientSuggestions(); });
@@ -1080,26 +1095,32 @@
     }
 
     function buildWhatsText(docType) {
-      const includeHeader = els.whatsHeaderToggle.value !== 'nao';
+      const includeHeader = els.whatsHeaderToggle.value === 'sim';
       const includeTotals = els.whatsTotalsToggle.value !== 'nao';
       const title = docType === 'orcamento' ? 'ORÇAMENTO' : 'PEDIDO';
       const lines = [];
-      lines.push(`*${title} TECHTO*`);
       if (includeHeader) {
+        lines.push(`*${title} TECHTO*`);
         const headerKeys = { name: 'Cliente', date: 'Data', freight: 'Frete' };
         for (const [key, label] of Object.entries(headerKeys)) {
           const v = state.client[key];
           if (v == null || String(v).trim() === '') continue;
           lines.push(`${label}: ${key === 'date' ? formatDateOnly(v) : v}`);
         }
+        lines.push('');
       }
-      lines.push('');
+      const includeIcms = els.whatsIcmsToggle.value !== 'nao';
       state.items.forEach((item, idx) => {
+        const c = computeLine(item);
         // "Item N" deixa explícito que N é a posição na lista, não a quantidade do produto
         lines.push(`*Item ${idx + 1}*`);
-        lines.push(`${item.code || '—'} - ${item.description}`);
+        lines.push(`${item.code || '—'} - ${item.description} - ${formatMoney(c.unitWithoutTax)}`);
+        if (includeIcms) lines.push(`ICMS: ${formatPercent(getIcmsPercent(item))}`);
+        const ipiPct = Number(item.ipi || 0);
+        if (ipiPct !== 0) lines.push(`IPI: ${formatPercent(ipiPct)}`);
+        const stPct = getStPercent(item);
+        if (stPct !== 0) lines.push(`ST: ${formatPercent(stPct)}`);
         if (includeTotals) lines.push(`Qtd: ${item.qty}`);
-        if (item.hasSt) lines.push(`ST: ${formatPercent(getStPercent(item))}`);
       });
       if (includeTotals) {
         lines.push('');
@@ -1111,10 +1132,8 @@
         if (s.retiraSavings > 0) lines.push(`Economia Retira: ${formatMoney(s.retiraSavings)}`);
         if (s.avistaSavings > 0) lines.push(`Economia À vista: ${formatMoney(s.avistaSavings)}`);
         if (state.saleType === 'venda_direta') lines.push(`Comissão: ${els.commissionTotal.textContent}`);
+        if (state.notes && state.notes.trim()) { lines.push(''); lines.push('*Observações:*'); lines.push(state.notes.trim()); }
       }
-      lines.push('');
-      lines.push('*Observações:*');
-      lines.push(state.notes && state.notes.trim() ? state.notes.trim() : '—');
       return lines.join('\n');
     }
 
