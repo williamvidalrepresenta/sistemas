@@ -56,8 +56,7 @@
     .tax-breakdown strong { color:var(--ok); }
     .inline-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     .mobile-stack { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .suggestions { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); max-height:min(70vh, 640px); overflow:auto; }
-    #suggestions.suggestions { max-height:min(70vh, 640px); }
+    .suggestions { position:fixed; z-index:999; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); max-height:min(70vh, 640px); overflow:auto; }
     .suggestion { padding:8px 12px; border-bottom:1px solid #f5ece8; cursor:pointer; display:grid; gap:2px; }
     .suggestion:last-child { border-bottom:0; }
     .suggestion:hover, .suggestion.active { background:#eef9f3; }
@@ -740,6 +739,25 @@
       return out.slice(0, CONFIGURACOES.comportamento.maxSugestoes);
     }
 
+    function positionSuggestions() {
+      const rect = els.itemSearch.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      els.suggestions.style.left = rect.left + 'px';
+      els.suggestions.style.width = rect.width + 'px';
+      if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
+        els.suggestions.style.top = (rect.bottom + 6) + 'px';
+        els.suggestions.style.bottom = 'auto';
+        els.suggestions.style.maxHeight = Math.min(640, spaceBelow - 16) + 'px';
+      } else {
+        els.suggestions.style.top = 'auto';
+        els.suggestions.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+        els.suggestions.style.maxHeight = Math.min(640, spaceAbove - 16) + 'px';
+      }
+    }
+    window.addEventListener('resize', () => { if (!els.suggestions.classList.contains('hidden')) positionSuggestions(); });
+    window.addEventListener('scroll', () => { if (!els.suggestions.classList.contains('hidden')) positionSuggestions(); }, true);
+
     function handleSearchInput(e) {
       const raw = e.target.value;
       const matches = getMatches(raw);
@@ -767,6 +785,7 @@
         : (customMatches.length ? '' : '<div class="suggestion-empty">Nenhum item encontrado. Use “Adicionar item manualmente” se necessário.</div>');
       els.suggestions.innerHTML = html;
       els.suggestions.classList.remove('hidden');
+      positionSuggestions();
       const first = els.suggestions.querySelector('.suggestion[data-code], .suggestion[data-custom-idx]');
       if (first) first.classList.add('active');
       els.suggestions.querySelectorAll('[data-code]').forEach(node => node.addEventListener('click', () => addItemByCode(node.dataset.code)));
