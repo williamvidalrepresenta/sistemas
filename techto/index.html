@@ -8,7 +8,7 @@
   <style>
     :root {
       --bg:#ffffff;--paper:#fffdf8;--text:#231815;--muted:#6e625d;--line:#eadfda;--soft:#fff6ef;
-      --brand:#177245;--accent:#1f8a55;--yellow:#f3cb12;--yellow-deep:#c49e00;--ok:#177245;--ok-soft:#e8f4ed;--gray:#f4f1ef;
+      --brand:#177245;--accent:#1f8a55;--yellow:#f3cb12;--yellow-light:#fde98a;--yellow-deep:#c49e00;--ok:#177245;--ok-soft:#e8f4ed;--gray:#f4f1ef;
       --shadow:0 18px 48px rgba(23,114,69,.10);--radius:14px;--radius-sm:10px;
       --landscape-ratio:1.414;
     }
@@ -28,6 +28,7 @@
     .btn:hover { transform:translateY(-1px); border-color:var(--brand); }
     .btn-primary { background:var(--brand); color:#fff; border-color:var(--brand); }
     .btn-accent { background:var(--yellow); color:#3a2a00; border-color:var(--yellow); }
+    .btn-accent-light { background:var(--yellow-light); color:#3a2a00; border-color:var(--yellow-light); }
     .btn-discreet { padding:7px 10px; font-size:.84rem; border-radius:999px; background:#fff; }
     .btn-danger { background:#fff; color:#6e625d; border-color:var(--line); }
     .layout { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(320px,.95fr); gap:16px; align-items:start; }
@@ -139,6 +140,7 @@
         <button class="btn btn-discreet" id="historyBtn">Histórico</button>
         <button class="btn btn-discreet" id="settingsBtn">Configurações</button>
         <button class="btn btn-discreet" id="clearAllBtn" title="Limpar pedido atual">🧹 Limpar</button>
+        <button class="btn btn-accent-light" id="quickWhatsBtn" title="Gerar texto de orçamento para WhatsApp direto">Orçam. em texto</button>
         <button class="btn btn-accent" id="saveBtn">Salvar / Exportar</button>
       </div>
     </div>
@@ -409,11 +411,11 @@
         </div>
         <div>
           <div class="label">Incluir totalizadores</div>
-          <select class="select" id="whatsTotalsToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
+          <select class="select" id="whatsTotalsToggle"><option value="nao" selected>Não</option><option value="sim">Sim</option></select>
         </div>
         <div>
           <div class="label">Incluir ICMS</div>
-          <select class="select" id="whatsIcmsToggle"><option value="sim">Sim</option><option value="nao">Não</option></select>
+          <select class="select" id="whatsIcmsToggle"><option value="nao" selected>Não</option><option value="sim">Sim</option></select>
         </div>
       </div>
       <textarea id="whatsText" class="whats-box"></textarea>
@@ -651,6 +653,12 @@
       els.clientSummaryToggle.addEventListener('click', () => toggleCollapse(els.clientSummaryToggle, els.clientSummaryContent, 'Exibir dados', 'Ocultar dados'));
       q('#clientPanelBtn').addEventListener('click', () => els.clientDialog.showModal());
       q('#saveBtn').addEventListener('click', () => els.saveDialog.showModal());
+      q('#quickWhatsBtn').addEventListener('click', () => {
+        // Atalho direto: gera o texto de orçamento para WhatsApp sem passar pela validação de campos
+        state.lastWhatsDocType = 'orcamento';
+        els.whatsText.value = buildWhatsText('orcamento');
+        els.whatsDialog.showModal();
+      });
       q('#confirmExport').addEventListener('click', executeExport);
       q('#copyWhats').addEventListener('click', async () => { await navigator.clipboard.writeText(els.whatsText.value); alert('Texto copiado.'); });
       els.whatsHeaderToggle.addEventListener('change', () => { els.whatsText.value = buildWhatsText(state.lastWhatsDocType || 'orcamento'); });
@@ -1096,7 +1104,7 @@
 
     function buildWhatsText(docType) {
       const includeHeader = els.whatsHeaderToggle.value === 'sim';
-      const includeTotals = els.whatsTotalsToggle.value !== 'nao';
+      const includeTotals = els.whatsTotalsToggle.value === 'sim';
       const title = docType === 'orcamento' ? 'ORÇAMENTO' : 'PEDIDO';
       const lines = [];
       if (includeHeader) {
@@ -1109,11 +1117,12 @@
         }
         lines.push('');
       }
-      const includeIcms = els.whatsIcmsToggle.value !== 'nao';
+      const includeIcms = els.whatsIcmsToggle.value === 'sim';
+      const showItemLabel = state.items.length > 1;
       state.items.forEach((item, idx) => {
         const c = computeLine(item);
-        // "Item N" deixa explícito que N é a posição na lista, não a quantidade do produto
-        lines.push(`*Item ${idx + 1}*`);
+        // "Item N" só aparece com mais de 1 item na lista, pra não ser redundante com um único item
+        if (showItemLabel) lines.push(`*Item ${idx + 1}*`);
         lines.push(`${item.code || '—'} - ${item.description} - ${formatMoney(c.unitWithoutTax)}`);
         if (includeIcms) lines.push(`ICMS: ${formatPercent(getIcmsPercent(item))}`);
         const ipiPct = Number(item.ipi || 0);
