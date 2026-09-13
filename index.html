@@ -18,6 +18,8 @@
 
     --techto-a: #e2101a;
     --techto-b: #f6d600;
+
+    --chegadas-a: #2f6fed;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{
@@ -34,13 +36,13 @@
     height:100dvh;
   }
   header{
-    padding: clamp(20px, 5vh, 48px) 20px 4px;
+    padding: clamp(16px, 4vh, 40px) 20px 4px;
     text-align:center;
     flex-shrink:0;
   }
   .mark{
     display:inline-block;
-    margin-bottom: clamp(10px, 2.5vh, 22px);
+    margin-bottom: clamp(8px, 2vh, 18px);
   }
   .mark span{
     font-size:13px;
@@ -50,7 +52,7 @@
     color:var(--ink);
   }
   h1{
-    font-size:clamp(24px, 4.5vw, 34px);
+    font-size:clamp(22px, 4.2vw, 32px);
     font-weight:800;
     letter-spacing:-0.01em;
   }
@@ -64,7 +66,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    padding: 12px 20px;
+    padding: 10px 20px;
     min-height:0;
   }
   .grid{
@@ -102,11 +104,11 @@
     .sub{ font-size:12px; margin-top:2px; }
     main{ padding: 6px 20px; }
     .grid{
-      height: 110px;
-      max-height: 110px;
-      gap:10px;
+      height: 100px;
+      max-height: 100px;
+      gap:8px;
     }
-    .name{ font-size:18px; }
+    .name{ font-size:16px; }
     footer{ padding: 4px 20px 10px; gap:8px; }
     .crm-btn{ padding: 8px 16px; font-size:12px; }
   }
@@ -153,10 +155,39 @@
   }
   #techto .name{ color:#ffffff; }
 
+  /* Chegadas: botão pequeno fixo no canto superior direito.
+     Largura = mesma de um botão do footer. Altura = 2x (dois empilhados). */
+  .corner-btn{
+    position:fixed;
+    top:16px; right:16px;
+    z-index:15;
+    width:90px;
+    height:96px;
+    background:var(--chegadas-a);
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:#fff;
+    text-decoration:none;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.01em;
+    padding:6px;
+    box-shadow:0 4px 14px rgba(47,111,237,0.3);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .corner-btn:hover, .corner-btn:focus-visible{
+    background:#255bc4;
+    transform:translateY(-2px);
+  }
+  .corner-btn:active{ transform:translateY(0); }
+
   .name{
     position:relative;
     z-index:2;
-    font-size:26px;
+    font-size:24px;
     font-weight:800;
     letter-spacing:0.03em;
     text-transform:uppercase;
@@ -197,6 +228,8 @@
 </style>
 </head>
 <body>
+
+<a class="corner-btn" href="./chegadas/">Chegadas</a>
 
 <header>
   <div class="mark">
