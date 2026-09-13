@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chegadas · Vidal</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%2314213d'/%3E%3Cpath d='M20 60 L50 30 L80 60 L80 75 L20 75 Z' fill='%23fca311'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f7f7f5;
+    --panel:#ffffff;
+    --ink:#14213d;
+    --muted:#7c8092;
+    --line:#e7e6e1;
+    --accent:#fca311;
+    --accent-ink:#5c3d00;
+    --danger:#c1453f;
+    --ok:#0c8548;
+    --radius:14px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:var(--ink); color:#fff;
+    padding:22px 20px 18px;
+    position:sticky; top:0; z-index:10;
+  }
+  header .top{
+    display:flex; align-items:center; justify-content:space-between;
+    max-width:760px; margin:0 auto 14px;
+  }
+  header .top a{
+    color:#c7ccdb; text-decoration:none; font-size:13px; font-weight:600;
+  }
+  header h1{ font-size:21px; font-weight:800; letter-spacing:-0.01em; margin:0 0 2px; }
+  header .sub{ font-size:13px; color:#aab0c4; }
+  .wrap{ max-width:760px; margin:0 auto; padding:16px 16px 100px; }
+
+  .search{
+    position:relative; margin-bottom:14px;
+  }
+  .search input{
+    width:100%; padding:13px 14px 13px 40px; border-radius:12px;
+    border:1px solid var(--line); background:var(--panel);
+    font-size:15px; color:var(--ink); outline:none;
+  }
+  .search input:focus{ border-color:var(--ink); }
+  .search svg{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; stroke:var(--muted); fill:none;
+  }
+
+  .chips{ display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; margin-bottom:16px; }
+  .chip{
+    flex-shrink:0; padding:7px 13px; border-radius:999px; font-size:13px; font-weight:700;
+    border:1px solid var(--line); background:var(--panel); color:var(--muted); cursor:pointer;
+    user-select:none;
+  }
+  .chip.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+
+  .section-label{
+    font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase;
+    letter-spacing:0.04em; margin:22px 2px 10px;
+  }
+  .section-label:first-child{ margin-top:0; }
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:10px; cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .card:active{ transform:scale(0.995); }
+  .card:hover{ border-color:#c9cbd6; }
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .card-title{ font-size:15.5px; font-weight:700; line-height:1.3; }
+  .badge{
+    flex-shrink:0; font-size:11px; font-weight:800; padding:3px 8px; border-radius:7px;
+    background:#eef0f5; color:var(--ink); letter-spacing:0.02em;
+  }
+  .card-date{ font-size:13.5px; color:var(--accent-ink); font-weight:700; margin-top:6px; }
+  .card-items{ font-size:13px; color:var(--muted); margin-top:5px; line-height:1.4; }
+  .card.arrived{ opacity:0.6; }
+  .card.arrived .card-date{ color:var(--ok); }
+
+  .empty{
+    text-align:center; padding:50px 20px; color:var(--muted); font-size:14px;
+  }
+
+  .fab{
+    position:fixed; bottom:22px; right:20px; z-index:20;
+    background:var(--ink); color:#fff; border:none; border-radius:999px;
+    padding:15px 22px; font-size:14.5px; font-weight:700; box-shadow:0 8px 20px rgba(20,33,61,0.35);
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+  }
+  .fab:active{ transform:scale(0.97); }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(20,20,25,0.45); z-index:30;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .overlay.open{ display:flex; }
+  .sheet{
+    background:var(--panel); width:100%; max-width:600px; max-height:90vh;
+    border-radius:20px 20px 0 0; overflow-y:auto; padding:20px 20px 28px;
+    animation:up .18s ease;
+  }
+  @media (min-width:640px){
+    .overlay{ align-items:center; }
+    .sheet{ border-radius:20px; max-height:85vh; margin:0 16px; }
+  }
+  @keyframes up{ from{ transform:translateY(24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+
+  .sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .sheet-head h2{ font-size:18px; font-weight:800; }
+  .close-btn{
+    border:none; background:#f0f0ee; width:30px; height:30px; border-radius:50%;
+    font-size:16px; color:var(--muted); cursor:pointer;
+  }
+
+  label{ display:block; font-size:12.5px; font-weight:700; color:var(--muted); margin:14px 0 6px; }
+  label:first-of-type{ margin-top:0; }
+  input[type=text], textarea, select{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+    font-size:14.5px; color:var(--ink); background:#fbfbfa; outline:none; font-family:inherit;
+  }
+  input[type=text]:focus, textarea:focus, select:focus{ border-color:var(--ink); background:#fff; }
+  textarea{ resize:vertical; min-height:74px; line-height:1.45; }
+  .hint{ font-size:12px; color:var(--muted); margin-top:5px; }
+
+  .brand-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .brand-pick{
+    padding:8px 13px; border-radius:9px; border:1px solid var(--line); background:#fff;
+    font-size:13px; font-weight:700; color:var(--muted); cursor:pointer;
+  }
+  .brand-pick.active{ background:var(--ink); border-color:var(--ink); color:#fff; }
+
+  .btn-row{ display:flex; gap:10px; margin-top:20px; }
+  .btn{
+    flex:1; padding:13px; border-radius:11px; border:none; font-size:14.5px; font-weight:700;
+    cursor:pointer;
+  }
+  .btn.primary{ background:var(--ink); color:#fff; }
+  .btn.ghost{ background:#f0f0ee; color:var(--ink); }
+  .btn.danger{ background:#fbeceb; color:var(--danger); }
+  .btn:disabled{ opacity:0.5; }
+
+  .detail-items{ background:#fbfbfa; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.6; white-space:pre-wrap; }
+  .timeline{ margin-top:6px; }
+  .tl-row{
+    display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .tl-row:last-child{ border-bottom:none; }
+  .tl-dot{ width:7px; height:7px; border-radius:50%; background:var(--accent); margin-top:5px; flex-shrink:0; }
+  .tl-text b{ color:var(--ink); }
+  .tl-when{ color:var(--muted); font-size:11.5px; margin-top:1px; }
+
+  .search-results .group-label{ font-size:12px; font-weight:700; color:var(--muted); margin:16px 2px 8px; text-transform:uppercase; letter-spacing:0.03em; }
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:var(--ink); color:#fff; padding:11px 20px; border-radius:10px; font-size:13.5px;
+    font-weight:600; opacity:0; transition:opacity .2s, transform .2s; z-index:50; pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .spinner{
+    display:inline-block; width:14px; height:14px; border:2px solid #ffffff55;
+    border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; margin-right:6px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <a href="../">← Hub Vidal</a>
+    <a href="#" id="refreshBtn">Atualizar</a>
+  </div>
+  <h1>Chegadas</h1>
+  <div class="sub">Previsão de itens em falta no estoque</div>
+</header>
+
+<div class="wrap">
+
+  <div class="search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar item (ex: bomba, mangueira...)">
+  </div>
+
+  <div class="chips" id="brandChips"></div>
+
+  <div id="searchView" style="display:none"></div>
+  <div id="listView"></div>
+
+</div>
+
+<button class="fab" id="newBtn">+ Novo tópico</button>
+
+<div class="overlay" id="formOverlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2 id="formTitle">Novo tópico</h2>
+      <button class="close-btn" id="formClose">✕</button>
+    </div>
+
+    <label>Empresa</label>
+    <div class="brand-row" id="brandRow"></div>
+
+    <label>Título do tópico</label>
+    <input type="text" id="fTitulo" placeholder="Ex: Container 40' - Lote Novembro">
+
+    <label>Previsão de chegada</label>
+    <input type="text" id="fPrevisao" placeholder="Ex: 15/11 ou primeira quinzena de novembro">
+    <div class="hint">Pode ser data exata ou período livre.</div>
+
+    <label>Itens</label>
+    <textarea id="fItens" placeholder="Um item por linha. Ex:&#10;Bomba XPTO 2000 - 20 un&#10;Mangueira 3/4 - 50 un"></textarea>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="formCancel">Cancelar</button>
+      <button class="btn primary" id="formSave">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="detailOverlay">
+  <div class="sheet" id="detailSheet"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ CONFIGURAÇÃO ============
+   Preencha com os dados do seu projeto Supabase
+   (Project Settings > API, no painel do Supabase).
+*/
+const SUPABASE_URL      = "https://kkonlzdreimaudfzhuzl.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtrb25semRyZWltYXVkZnpodXpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDg1OTUsImV4cCI6MjEwNDg4NDU5NX0.v-Zrw0BRDkMUan0Ldrn7A5R-mENjY11jsI_H-t7Ay6A";
+const TOPICS_TABLE  = "chegadas";
+const HISTORY_TABLE = "chegadas_historico";
+/* ======================================= */
+
+const BRANDS = [
+  { id:"R", name:"Rothenberger" },
+  { id:"C", name:"Chiaperini" },
+  { id:"T", name:"Techto" },
+  { id:"P", name:"Presto" },
+  { id:"H", name:"Horbach" },
+  { id:"O", name:"Outra" },
+];
+
+let topics = [];       // { id, empresa, titulo, previsao, itens[], status, criadoEm }
+let history = [];      // { id, topicoId, previsaoAnterior, previsaoNova, alteradoEm }
+let activeBrand = "ALL";
+let editingId = null;
+
+// ---------- utilidades ----------
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function uid(){ return 'T' + Date.now() + Math.floor(Math.random()*1000); }
+function nowStr(){
+  const d = new Date();
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// tenta extrair uma data real do texto de previsão para poder ordenar/comparar;
+// se não achar padrão de data, trata como "sem data definida" (vai para o fim)
+function parsePrevisao(str){
+  if(!str) return null;
+  const m = str.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+  if(m){
+    let [_, d, mo, y] = m;
+    y = y ? (y.length===2 ? '20'+y : y) : String(new Date().getFullYear());
+    const dt = new Date(y, mo-1, d);
+    if(!isNaN(dt.getTime())) return dt;
+  }
+  // tenta "quinzena de <mês>"
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const lower = str.toLowerCase();
+  for(let i=0;i<meses.length;i++){
+    if(lower.includes(meses[i])){
+      const yMatch = lower.match(/20\d{2}/);
+      const y = yMatch ? yMatch[0] : new Date().getFullYear();
+      const day = lower.includes('segunda quinzena') || lower.includes('fim') ? 20 : 5;
+      return new Date(y, i, day);
+    }
+  }
+  return null;
+}
+
+function isPast(topic){
+  if(topic.status === 'chegou') return true;
+  const d = parsePrevisao(topic.previsao);
+  if(!d) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return d < today;
+}
+
+// ---------- render: lista principal ----------
+function renderBrandChips(){
+  const el = document.getElementById('brandChips');
+  el.innerHTML = '';
+  const all = document.createElement('div');
+  all.className = 'chip' + (activeBrand==='ALL' ? ' active' : '');
+  all.textContent = 'Todas';
+  all.onclick = () => { activeBrand='ALL'; renderBrandChips(); renderList(); };
+  el.appendChild(all);
+  BRANDS.forEach(b => {
+    const c = document.createElement('div');
+    c.className = 'chip' + (activeBrand===b.id ? ' active' : '');
+    c.textContent = b.name;
+    c.onclick = () => { activeBrand = b.id; renderBrandChips(); renderList(); };
+    el.appendChild(c);
+  });
+}
+
+function filteredTopics(){
+  return topics.filter(t => activeBrand==='ALL' || t.empresa===activeBrand);
+}
+
+function renderList(){
+  const list = filteredTopics();
+  const pendentes = list.filter(t => !isPast(t)).sort((a,b)=>{
+    const da = parsePrevisao(a.previsao), db = parsePrevisao(b.previsao);
+    if(!da && !db) return 0;
+    if(!da) return 1;
+    if(!db) return -1;
+    return da - db;
+  });
+  const chegados = list.filter(t => isPast(t)).sort((a,b)=> (b.criadoEm||'').localeCompare(a.criadoEm||''));
+
+  const el = document.getElementById('listView');
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty">Nenhum tópico cadastrado ainda.<br>Toque em "+ Novo tópico" para começar.</div>`;
+    return;
+  }
+
+  let html = '';
+  html += `<div class="section-label">Previstos (${pendentes.length})</div>`;
+  html += pendentes.length ? pendentes.map(cardHtml).join('') : `<div class="empty" style="padding:20px 0">Nada pendente por aqui.</div>`;
+
+  if(chegados.length){
+    html += `<div class="section-label">Chegados / vencidos (${chegados.length})</div>`;
+    html += chegados.map(cardHtml).join('');
+  }
+  el.innerHTML = html;
+
+  list.forEach(t => {
+    const node = document.getElementById('card-'+t.id);
+    if(node) node.onclick = () => openDetail(t.id);
+  });
+}
+
+function brandName(id){ return (BRANDS.find(b=>b.id===id)||{}).name || id; }
+
+function cardHtml(t){
+  const arrived = isPast(t);
+  const itemsPreview = (t.itens||[]).slice(0,3).join(' · ') + ((t.itens||[]).length > 3 ? ` · +${t.itens.length-3}` : '');
+  return `
+    <div class="card ${arrived && t.status==='chegou' ? 'arrived' : ''}" id="card-${t.id}">
+      <div class="card-top">
+        <div class="card-title">${esc(t.titulo)}</div>
+        <div class="badge">${esc(brandName(t.empresa))}</div>
+      </div>
+      <div class="card-date">${t.status==='chegou' ? '✓ Chegou · ' : '📦 '}${esc(t.previsao)}</div>
+      <div class="card-items">${esc(itemsPreview)}</div>
+    </div>`;
+}
+
+// ---------- busca ----------
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  const searchView = document.getElementById('searchView');
+  const listView = document.getElementById('listView');
+  if(!q){ searchView.style.display='none'; listView.style.display='block'; return; }
+
+  listView.style.display='none';
+  searchView.style.display='block';
+
+  const matches = [];
+  topics.forEach(t => {
+    (t.itens||[]).forEach(item => {
+      if(item.toLowerCase().includes(q)){
+        matches.push({ topic:t, item });
+      }
+    });
+    if(t.titulo.toLowerCase().includes(q)){
+      matches.push({ topic:t, item:null });
+    }
+  });
+
+  if(matches.length===0){
+    searchView.innerHTML = `<div class="empty">Nenhum item ou tópico encontrado para "${esc(q)}".</div>`;
+    return;
+  }
+
+  const proximos = matches.filter(m => !isPast(m.topic));
+  const anteriores = matches.filter(m => isPast(m.topic));
+
+  const rowHtml = (m) => `
+    <div class="card" id="search-${m.topic.id}-${Math.random().toString(36).slice(2)}">
+      <div class="card-top">
+        <div class="card-title">${m.item ? esc(m.item) : esc(m.topic.titulo)}</div>
+        <div class="badge">${esc(brandName(m.topic.empresa))}</div>
+      </div>
+      <div class="card-date">${m.topic.status==='chegou' ? '✓ Chegou · ' : '📦 '}${esc(m.topic.previsao)}</div>
+      <div class="card-items">em: ${esc(m.topic.titulo)}</div>
+    </div>`;
+
+  let html = '';
+  if(proximos.length){
+    html += `<div class="search-results"><div class="group-label">Próximas entregas</div>${proximos.map(rowHtml).join('')}</div>`;
+  }
+  if(anteriores.length){
+    html += `<div class="search-results"><div class="group-label">Entregas anteriores</div>${anteriores.map(rowHtml).join('')}</div>`;
+  }
+  searchView.innerHTML = html;
+
+  // liga clique nos cards de resultado ao tópico correspondente
+  [...proximos, ...anteriores].forEach(m => {
+    document.querySelectorAll(`[id^="search-${m.topic.id}-"]`).forEach(node => {
+      node.onclick = () => openDetail(m.topic.id);
+    });
+  });
+});
+
+// ---------- formulário novo/editar ----------
+function renderBrandRow(selected){
+  const el = document.getElementById('brandRow');
+  el.innerHTML = '';
+  BRANDS.forEach(b => {
+    const btn = document.createElement('div');
+    btn.className = 'brand-pick' + (selected===b.id ? ' active' : '');
+    btn.textContent = b.id;
+    btn.title = b.name;
+    btn.onclick = () => { renderBrandRow(b.id); };
+    el.appendChild(btn);
+  });
+}
+function getSelectedBrand(){
+  const active = document.querySelector('#brandRow .brand-pick.active');
+  return active ? active.title && BRANDS.find(b=>b.name===active.title).id : null;
+}
+
+document.getElementById('newBtn').onclick = () => {
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'Novo tópico';
+  document.getElementById('fTitulo').value = '';
+  document.getElementById('fPrevisao').value = '';
+  document.getElementById('fItens').value = '';
+  renderBrandRow(activeBrand !== 'ALL' ? activeBrand : null);
+  document.getElementById('formOverlay').classList.add('open');
+};
+document.getElementById('formClose').onclick = () => document.getElementById('formOverlay').classList.remove('open');
+document.getElementById('formCancel').onclick = () => document.getElementById('formOverlay').classList.remove('open');
+
+document.getElementById('formSave').onclick = async () => {
+  const titulo = document.getElementById('fTitulo').value.trim();
+  const previsao = document.getElementById('fPrevisao').value.trim();
+  const itensRaw = document.getElementById('fItens').value.trim();
+  const empresa = getSelectedBrand();
+
+  if(!titulo || !previsao || !itensRaw || !empresa){
+    toast('Preencha empresa, título, previsão e ao menos um item.');
+    return;
+  }
+  const itens = itensRaw.split('\n').map(s=>s.trim()).filter(Boolean);
+
+  const btn = document.getElementById('formSave');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Salvando...';
+
+  try{
+    if(editingId){
+      const old = topics.find(t=>t.id===editingId);
+      const previsaoMudou = old.previsao !== previsao;
+      await sbUpdate(TOPICS_TABLE, editingId, { empresa, titulo, previsao, itens });
+      if(previsaoMudou){
+        await sbInsert(HISTORY_TABLE, {
+          id: uid(), topico_id: editingId,
+          previsao_anterior: old.previsao, previsao_nova: previsao, alterado_em: nowStr()
+        });
+      }
+    } else {
+      const id = uid();
+      await sbInsert(TOPICS_TABLE, {
+        id, empresa, titulo, previsao, itens, status:'pendente', criado_em: nowStr()
+      });
+    }
+    await loadData();
+    document.getElementById('formOverlay').classList.remove('open');
+    toast('Salvo!');
+  } catch(e){
+    toast('Erro ao salvar. Tente novamente.');
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+};
+
+// ---------- detalhe / histórico ----------
+function openDetail(id){
+  const t = topics.find(x=>x.id===id);
+  if(!t) return;
+  const hist = history.filter(h=>h.topicoId===id).sort((a,b)=> (b.alteradoEm||'').localeCompare(a.alteradoEm||''));
+
+  const sheet = document.getElementById('detailSheet');
+  sheet.innerHTML = `
+    <div class="sheet-head">
+      <h2>${esc(t.titulo)}</h2>
+      <button class="close-btn" id="detailClose">✕</button>
+    </div>
+
+    <div class="badge" style="margin-bottom:10px">${esc(brandName(t.empresa))}</div>
+    <div class="card-date" style="margin-bottom:14px">${t.status==='chegou' ? '✓ Chegou · ' : '📦 Previsão atual: '}${esc(t.previsao)}</div>
+
+    <label>Itens deste tópico</label>
+    <div class="detail-items">${esc((t.itens||[]).join('\n'))}</div>
+
+    ${hist.length ? `
+      <label>Histórico de previsões</label>
+      <div class="timeline">
+        ${hist.map(h => `
+          <div class="tl-row">
+            <div class="tl-dot"></div>
+            <div class="tl-text">
+              <div><b>${esc(h.previsaoAnterior)}</b> → <b>${esc(h.previsaoNova)}</b></div>
+              <div class="tl-when">${esc(h.alteradoEm)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    ` : ''}
+
+    <div class="btn-row">
+      <button class="btn ghost" id="detailEdit">Editar</button>
+      ${t.status!=='chegou' ? `<button class="btn primary" id="detailArrived">Marcar chegou</button>` : ''}
+    </div>
+    <div class="btn-row">
+      <button class="btn danger" id="detailDelete">Excluir tópico</button>
+    </div>
+  `;
+
+  document.getElementById('detailClose').onclick = () => document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailEdit').onclick = () => {
+    document.getElementById('detailOverlay').classList.remove('open');
+    editingId = t.id;
+    document.getElementById('formTitle').textContent = 'Editar tópico';
+    document.getElementById('fTitulo').value = t.titulo;
+    document.getElementById('fPrevisao').value = t.previsao;
+    document.getElementById('fItens').value = (t.itens||[]).join('\n');
+    renderBrandRow(t.empresa);
+    document.getElementById('formOverlay').classList.add('open');
+  };
+  const arrivedBtn = document.getElementById('detailArrived');
+  if(arrivedBtn){
+    arrivedBtn.onclick = async () => {
+      arrivedBtn.disabled = true;
+      try{
+        await sbUpdate(TOPICS_TABLE, t.id, { status:'chegou' });
+        await loadData();
+        document.getElementById('detailOverlay').classList.remove('open');
+        toast('Marcado como chegou.');
+      } catch(e){ toast('Erro ao atualizar.'); }
+    };
+  }
+  document.getElementById('detailDelete').onclick = async () => {
+    if(!confirm('Excluir este tópico e seu histórico? Essa ação não pode ser desfeita.')) return;
+    try{
+      await sbDelete(HISTORY_TABLE, 'topico_id', t.id);
+      await sbDelete(TOPICS_TABLE, 'id', t.id);
+      await loadData();
+      document.getElementById('detailOverlay').classList.remove('open');
+      toast('Tópico excluído.');
+    } catch(e){ toast('Erro ao excluir.'); }
+  };
+
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+// ---------- comunicação com Supabase ----------
+function sbHeaders(extra){
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json',
+    ...extra
+  };
+}
+
+async function sbInsert(table, row){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: sbHeaders({ 'Prefer': 'return=minimal' }),
+    body: JSON.stringify(row)
+  });
+  if(!res.ok) throw new Error(await res.text());
+}
+
+async function sbUpdate(table, id, patch){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: sbHeaders({ 'Prefer': 'return=minimal' }),
+    body: JSON.stringify(patch)
+  });
+  if(!res.ok) throw new Error(await res.text());
+}
+
+async function sbDelete(table, column, id){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: sbHeaders()
+  });
+  if(!res.ok) throw new Error(await res.text());
+}
+
+async function loadData(){
+  const [rTop, rHist] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/${TOPICS_TABLE}?select=*`, { headers: sbHeaders() }),
+    fetch(`${SUPABASE_URL}/rest/v1/${HISTORY_TABLE}?select=*`, { headers: sbHeaders() })
+  ]);
+  const jTop = await rTop.json();
+  const jHist = await rHist.json();
+  if(!Array.isArray(jTop)) throw new Error(JSON.stringify(jTop));
+  if(!Array.isArray(jHist)) throw new Error(JSON.stringify(jHist));
+
+  topics = jTop.map(o => ({
+    id: o.id,
+    empresa: o.empresa,
+    titulo: o.titulo,
+    previsao: o.previsao,
+    itens: Array.isArray(o.itens) ? o.itens : [],
+    status: o.status || 'pendente',
+    criadoEm: o.criado_em,
+  }));
+
+  history = jHist.map(o => ({
+    id: o.id,
+    topicoId: o.topico_id,
+    previsaoAnterior: o.previsao_anterior,
+    previsaoNova: o.previsao_nova,
+    alteradoEm: o.alterado_em,
+  }));
+
+  renderList();
+}
+
+document.getElementById('refreshBtn').onclick = async (e) => {
+  e.preventDefault();
+  toast('Atualizando...');
+  await loadData();
+  toast('Atualizado.');
+};
+
+// fecha modais tocando fora
+[document.getElementById('formOverlay'), document.getElementById('detailOverlay')].forEach(ov => {
+  ov.addEventListener('click', (e) => { if(e.target === ov) ov.classList.remove('open'); });
+});
+
+// ---------- init ----------
+renderBrandChips();
+loadData().catch(e => {
+  console.error(e);
+  document.getElementById('listView').innerHTML = `<div class="empty">Não foi possível carregar os dados.<br>Confira a configuração da planilha no topo do arquivo.</div>`;
+});
+</script>
+</body>
+</html>
