@@ -542,7 +542,7 @@ function openDetail(id){
 
     <div class="btn-row">
       <button class="btn ghost" id="detailEdit">Editar</button>
-      ${t.status!=='chegou' ? `<button class="btn primary" id="detailArrived">Marcar chegou</button>` : ''}
+      ${t.status!=='chegou' ? `<button class="btn primary" id="detailArrived">Marcar chegou</button>` : `<button class="btn primary" id="detailUnarrive">Desmarcar chegada</button>`}
     </div>
     <div class="btn-row">
       <button class="btn danger" id="detailDelete">Excluir tópico</button>
@@ -569,6 +569,18 @@ function openDetail(id){
         await loadData();
         document.getElementById('detailOverlay').classList.remove('open');
         toast('Marcado como chegou.');
+      } catch(e){ toast('Erro ao atualizar.'); }
+    };
+  }
+  const unarriveBtn = document.getElementById('detailUnarrive');
+  if(unarriveBtn){
+    unarriveBtn.onclick = async () => {
+      unarriveBtn.disabled = true;
+      try{
+        await sbUpdate(TOPICS_TABLE, t.id, { status:'pendente' });
+        await loadData();
+        document.getElementById('detailOverlay').classList.remove('open');
+        toast('Chegada desmarcada.');
       } catch(e){ toast('Erro ao atualizar.'); }
     };
   }
