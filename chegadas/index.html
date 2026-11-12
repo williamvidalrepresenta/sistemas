@@ -236,13 +236,14 @@
 
 <script>
 /* ============ CONFIGURAÇÃO ============
-   Preencha com os dados do seu projeto Supabase
-   (Project Settings > API, no painel do Supabase).
+   Leitura: Google Sheets API (API key).
+   Gravação: Apps Script da planilha do Chegadas (webapp).
 */
-const SUPABASE_URL      = "https://kkonlzdreimaudfzhuzl.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtrb25semRyZWltYXVkZnpodXpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDg1OTUsImV4cCI6MjEwNDg4NDU5NX0.v-Zrw0BRDkMUan0Ldrn7A5R-mENjY11jsI_H-t7Ay6A";
-const TOPICS_TABLE  = "chegadas";
-const HISTORY_TABLE = "chegadas_historico";
+const SHEET_ID   = "12xPd1-79OnZzmicF3I5MYFOSp0CJ-YpLzGmlmtwKyNw";
+const API_KEY    = "AIzaSyBRLI-vQeH0ntGaB2EL8TNuLrqNL55hcyk";
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxOj2e96ScLJqiSzvRkUdLqz8ibdJe0iUIo5WHaW3EqhyjC1XWlrifqWUBx5naMhSrN/exec";
+const TOPICS_TAB = "Chegadas";
+const HIST_TAB   = "ChegadasHistorico";
 /* ======================================= */
 
 const BRANDS = [
@@ -483,17 +484,17 @@ document.getElementById('formSave').onclick = async () => {
     if(editingId){
       const old = topics.find(t=>t.id===editingId);
       const previsaoMudou = old.previsao !== previsao;
-      await sbUpdate(TOPICS_TABLE, editingId, { empresa, titulo, previsao, itens });
+      await api('update', { id: editingId, empresa, titulo, previsao, itens: itens.join('\n') });
       if(previsaoMudou){
-        await sbInsert(HISTORY_TABLE, {
-          id: uid(), topico_id: editingId,
-          previsao_anterior: old.previsao, previsao_nova: previsao, alterado_em: nowStr()
+        await api('logHistory', {
+          id: uid(), topicoId: editingId,
+          previsaoAnterior: old.previsao, previsaoNova: previsao, alteradoEm: nowStr()
         });
       }
     } else {
       const id = uid();
-      await sbInsert(TOPICS_TABLE, {
-        id, empresa, titulo, previsao, itens, status:'pendente', criado_em: nowStr()
+      await api('append', {
+        id, empresa, titulo, previsao, itens: itens.join('\n'), status:'pendente', criadoEm: nowStr()
       });
     }
     await loadData();
@@ -565,7 +566,7 @@ function openDetail(id){
     arrivedBtn.onclick = async () => {
       arrivedBtn.disabled = true;
       try{
-        await sbUpdate(TOPICS_TABLE, t.id, { status:'chegou' });
+        await api('update', { id: t.id, status:'chegou' });
         await loadData();
         document.getElementById('detailOverlay').classList.remove('open');
         toast('Marcado como chegou.');
@@ -577,7 +578,7 @@ function openDetail(id){
     unarriveBtn.onclick = async () => {
       unarriveBtn.disabled = true;
       try{
-        await sbUpdate(TOPICS_TABLE, t.id, { status:'pendente' });
+        await api('update', { id: t.id, status:'pendente' });
         await loadData();
         document.getElementById('detailOverlay').classList.remove('open');
         toast('Chegada desmarcada.');
@@ -587,8 +588,7 @@ function openDetail(id){
   document.getElementById('detailDelete').onclick = async () => {
     if(!confirm('Excluir este tópico e seu histórico? Essa ação não pode ser desfeita.')) return;
     try{
-      await sbDelete(HISTORY_TABLE, 'topico_id', t.id);
-      await sbDelete(TOPICS_TABLE, 'id', t.id);
+      await api('delete', { id: t.id });
       await loadData();
       document.getElementById('detailOverlay').classList.remove('open');
       toast('Tópico excluído.');
@@ -598,69 +598,63 @@ function openDetail(id){
   document.getElementById('detailOverlay').classList.add('open');
 }
 
-// ---------- comunicação com Supabase ----------
-function sbHeaders(extra){
-  return {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-    'Content-Type': 'application/json',
-    ...extra
-  };
-}
-
-async function sbInsert(table, row){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+// ---------- comunicação com Google Sheets / Apps Script ----------
+async function api(action, payload){
+  const res = await fetch(WEBAPP_URL, {
     method: 'POST',
-    headers: sbHeaders({ 'Prefer': 'return=minimal' }),
-    body: JSON.stringify(row)
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action: 'chegadas_' + action,
+      sheet: TOPICS_TAB,
+      historySheet: HIST_TAB,
+      ...payload
+    })
   });
-  if(!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  if(!data || data.success === false) throw new Error((data && data.error) || 'Erro desconhecido');
+  return data;
 }
 
-async function sbUpdate(table, id, patch){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    headers: sbHeaders({ 'Prefer': 'return=minimal' }),
-    body: JSON.stringify(patch)
+// Lê uma aba inteira via Sheets API. Se a aba ainda não existe
+// (nada foi gravado ainda), devolve lista vazia.
+async function readTab(tab){
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  const json = await res.json();
+  if(json.error){
+    if(json.error.code === 400 && /Unable to parse range/i.test(json.error.message || '')) return [];
+    throw new Error(json.error.message || 'Erro ao ler a planilha');
+  }
+  const values = json.values || [];
+  if(values.length < 2) return [];
+  const headers = values[0];
+  return values.slice(1).map(row => {
+    const o = {};
+    headers.forEach((h,i) => o[h] = row[i] ?? '');
+    return o;
   });
-  if(!res.ok) throw new Error(await res.text());
-}
-
-async function sbDelete(table, column, id){
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${column}=eq.${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    headers: sbHeaders()
-  });
-  if(!res.ok) throw new Error(await res.text());
 }
 
 async function loadData(){
-  const [rTop, rHist] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/${TOPICS_TABLE}?select=*`, { headers: sbHeaders() }),
-    fetch(`${SUPABASE_URL}/rest/v1/${HISTORY_TABLE}?select=*`, { headers: sbHeaders() })
-  ]);
-  const jTop = await rTop.json();
-  const jHist = await rHist.json();
-  if(!Array.isArray(jTop)) throw new Error(JSON.stringify(jTop));
-  if(!Array.isArray(jHist)) throw new Error(JSON.stringify(jHist));
+  const [rowsTop, rowsHist] = await Promise.all([readTab(TOPICS_TAB), readTab(HIST_TAB)]);
 
-  topics = jTop.map(o => ({
-    id: o.id,
-    empresa: o.empresa,
-    titulo: o.titulo,
-    previsao: o.previsao,
-    itens: Array.isArray(o.itens) ? o.itens : [],
-    status: o.status || 'pendente',
-    criadoEm: o.criado_em,
-  }));
+  topics = rowsTop.map(o => ({
+    id: o.ID,
+    empresa: o.Empresa,
+    titulo: o.Titulo,
+    previsao: o.Previsao,
+    itens: (o.Itens || '').split('\n').map(x=>x.trim()).filter(Boolean),
+    status: o.Status || 'pendente',
+    criadoEm: o.CriadoEm,
+  })).filter(t => t.id);
 
-  history = jHist.map(o => ({
-    id: o.id,
-    topicoId: o.topico_id,
-    previsaoAnterior: o.previsao_anterior,
-    previsaoNova: o.previsao_nova,
-    alteradoEm: o.alterado_em,
-  }));
+  history = rowsHist.map(o => ({
+    id: o.ID,
+    topicoId: o.TopicoID,
+    previsaoAnterior: o.PrevisaoAnterior,
+    previsaoNova: o.PrevisaoNova,
+    alteradoEm: o.AlteradoEm,
+  })).filter(h => h.id);
 
   renderList();
 }
