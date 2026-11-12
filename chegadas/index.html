@@ -166,6 +166,7 @@
     font-weight:600; opacity:0; transition:opacity .2s, transform .2s; z-index:50; pointer-events:none;
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast{ max-width:90vw; text-align:center; }
 
   .spinner{
     display:inline-block; width:14px; height:14px; border:2px solid #ffffff55;
@@ -265,7 +266,7 @@ function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  setTimeout(()=>t.classList.remove('show'), 4500);
 }
 function uid(){ return 'T' + Date.now() + Math.floor(Math.random()*1000); }
 function nowStr(){
@@ -497,12 +498,20 @@ document.getElementById('formSave').onclick = async () => {
         id, empresa, titulo, previsao, itens: itens.join('\n'), status:'pendente', criadoEm: nowStr()
       });
     }
-    await loadData();
     document.getElementById('formOverlay').classList.remove('open');
-    toast('Salvo!');
+    try{
+      await loadData();
+      toast('Salvo!');
+    } catch(e){
+      console.error(e);
+      showLoadError(e);
+      toast('Salvo, mas a lista não atualizou. Veja o aviso na tela.');
+    }
   } catch(e){
-    toast('Erro ao salvar. Tente novamente.');
     console.error(e);
+    toast('Erro ao gravar: ' + (e.message || e));
+    // a gravação pode ter chegado mesmo sem confirmação: atualiza para não duplicar
+    loadData().catch(()=>{});
   } finally {
     btn.disabled = false; btn.textContent = 'Salvar';
   }
@@ -567,10 +576,10 @@ function openDetail(id){
       arrivedBtn.disabled = true;
       try{
         await api('update', { id: t.id, status:'chegou' });
-        await loadData();
         document.getElementById('detailOverlay').classList.remove('open');
+        await loadData();
         toast('Marcado como chegou.');
-      } catch(e){ toast('Erro ao atualizar.'); }
+      } catch(e){ console.error(e); toast('Erro: ' + (e.message || e)); }
     };
   }
   const unarriveBtn = document.getElementById('detailUnarrive');
@@ -579,20 +588,20 @@ function openDetail(id){
       unarriveBtn.disabled = true;
       try{
         await api('update', { id: t.id, status:'pendente' });
-        await loadData();
         document.getElementById('detailOverlay').classList.remove('open');
+        await loadData();
         toast('Chegada desmarcada.');
-      } catch(e){ toast('Erro ao atualizar.'); }
+      } catch(e){ console.error(e); toast('Erro: ' + (e.message || e)); }
     };
   }
   document.getElementById('detailDelete').onclick = async () => {
     if(!confirm('Excluir este tópico e seu histórico? Essa ação não pode ser desfeita.')) return;
     try{
       await api('delete', { id: t.id });
-      await loadData();
       document.getElementById('detailOverlay').classList.remove('open');
+      await loadData();
       toast('Tópico excluído.');
-    } catch(e){ toast('Erro ao excluir.'); }
+    } catch(e){ console.error(e); toast('Erro: ' + (e.message || e)); }
   };
 
   document.getElementById('detailOverlay').classList.add('open');
@@ -600,17 +609,24 @@ function openDetail(id){
 
 // ---------- comunicação com Google Sheets / Apps Script ----------
 async function api(action, payload){
-  const res = await fetch(WEBAPP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({
-      action: 'chegadas_' + action,
-      sheet: TOPICS_TAB,
-      historySheet: HIST_TAB,
-      ...payload
-    })
-  });
-  const data = await res.json();
+  let res;
+  try{
+    res = await fetch(WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'chegadas_' + action,
+        sheet: TOPICS_TAB,
+        historySheet: HIST_TAB,
+        ...payload
+      })
+    });
+  } catch(err){
+    throw new Error('sem confirmação do Apps Script (confira a lista antes de tentar de novo)');
+  }
+  let data;
+  try{ data = await res.json(); }
+  catch(err){ throw new Error('resposta inválida do Apps Script'); }
   if(!data || data.success === false) throw new Error((data && data.error) || 'Erro desconhecido');
   return data;
 }
@@ -633,6 +649,11 @@ async function readTab(tab){
     headers.forEach((h,i) => o[h] = row[i] ?? '');
     return o;
   });
+}
+
+function showLoadError(e){
+  document.getElementById('listView').innerHTML =
+    `<div class="empty">Não foi possível ler a planilha.<br><small>${esc(String(e && e.message || e))}</small></div>`;
 }
 
 async function loadData(){
@@ -673,10 +694,7 @@ document.getElementById('refreshBtn').onclick = async (e) => {
 
 // ---------- init ----------
 renderBrandChips();
-loadData().catch(e => {
-  console.error(e);
-  document.getElementById('listView').innerHTML = `<div class="empty">Não foi possível carregar os dados.<br>Confira a configuração da planilha no topo do arquivo.</div>`;
-});
+loadData().catch(e => { console.error(e); showLoadError(e); });
 </script>
 </body>
 </html>
