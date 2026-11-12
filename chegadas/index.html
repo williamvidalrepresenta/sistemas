@@ -237,11 +237,9 @@
 
 <script>
 /* ============ CONFIGURAÇÃO ============
-   Leitura: Google Sheets API (API key).
-   Gravação: Apps Script da planilha do Chegadas (webapp).
+   Leitura e gravação: Apps Script da planilha do Chegadas (webapp).
+   Não usa API key.
 */
-const SHEET_ID   = "12xPd1-79OnZzmicF3I5MYFOSp0CJ-YpLzGmlmtwKyNw";
-const API_KEY    = "AIzaSyBRLI-vQeH0ntGaB2EL8TNuLrqNL55hcyk";
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxOj2e96ScLJqiSzvRkUdLqz8ibdJe0iUIo5WHaW3EqhyjC1XWlrifqWUBx5naMhSrN/exec";
 const TOPICS_TAB = "Chegadas";
 const HIST_TAB   = "ChegadasHistorico";
@@ -631,35 +629,23 @@ async function api(action, payload){
   return data;
 }
 
-// Lê uma aba inteira via Sheets API. Se a aba ainda não existe
-// (nada foi gravado ainda), devolve lista vazia.
-async function readTab(tab){
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(tab)}?key=${API_KEY}`;
-  const res = await fetch(url, { cache: 'no-store' });
-  const json = await res.json();
-  if(json.error){
-    if(json.error.code === 400 && /Unable to parse range/i.test(json.error.message || '')) return [];
-    throw new Error(json.error.message || 'Erro ao ler a planilha');
-  }
-  const values = json.values || [];
-  if(values.length < 2) return [];
-  const headers = values[0];
-  return values.slice(1).map(row => {
-    const o = {};
-    headers.forEach((h,i) => o[h] = row[i] ?? '');
-    return o;
-  });
-}
-
 function showLoadError(e){
   document.getElementById('listView').innerHTML =
-    `<div class="empty">Não foi possível ler a planilha.<br><small>${esc(String(e && e.message || e))}</small></div>`;
+    `<div class="empty">Não foi possível carregar os dados.<br><small>${esc(String(e && e.message || e))}</small></div>`;
 }
 
 async function loadData(){
-  const [rowsTop, rowsHist] = await Promise.all([readTab(TOPICS_TAB), readTab(HIST_TAB)]);
+  let json;
+  try{
+    const res = await fetch(`${WEBAPP_URL}?action=chegadas_list&t=${Date.now()}`, { cache: 'no-store' });
+    json = await res.json();
+  } catch(err){
+    throw new Error('não consegui falar com o Apps Script (confira a URL e se a implantação está como "Qualquer pessoa")');
+  }
+  if(!json || json.success === false) throw new Error((json && json.error) || 'resposta inválida do Apps Script');
+  if(!Array.isArray(json.topicos)) throw new Error('o Apps Script ainda está na versão antiga: crie uma nova versão da implantação');
 
-  topics = rowsTop.map(o => ({
+  topics = json.topicos.map(o => ({
     id: o.ID,
     empresa: o.Empresa,
     titulo: o.Titulo,
@@ -669,7 +655,7 @@ async function loadData(){
     criadoEm: o.CriadoEm,
   })).filter(t => t.id);
 
-  history = rowsHist.map(o => ({
+  history = (json.historico || []).map(o => ({
     id: o.ID,
     topicoId: o.TopicoID,
     previsaoAnterior: o.PrevisaoAnterior,
